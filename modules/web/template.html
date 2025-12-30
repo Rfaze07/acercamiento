@@ -111,6 +111,154 @@
     .footer-portal small {
     color: #bfbfbf;
     }
+    /* Botón izquierda */
+.btn-inicio {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 0;
+  border: 1px solid #fff;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  color: #fff;
+}
+
+.btn-inicio:hover {
+  background-color: #fff;
+  color: #000;
+}
+/* =========================
+   RESPONSIVE NAVBAR
+   ========================= */
+@media (max-width: 768px) {
+
+  .navbar-portal {
+    padding: 16px;
+    text-align: center;
+  }
+
+  /* Sacamos posiciones absolutas */
+  .btn-inicio,
+  .btn-gestion {
+    position: static;
+    transform: none;
+    display: inline-block;
+    margin: 8px 0;
+    width: 100%;
+    max-width: 240px;
+  }
+
+  /* Centramos todo */
+  .navbar-portal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Menú en columna */
+  .navbar-portal .nav {
+    flex-direction: column;
+  }
+
+  .navbar-portal .nav-link {
+    padding: 8px 0;
+  }
+
+  /* Línea inferior más corta */
+  .navbar-portal .nav-link::after {
+    bottom: 0;
+  }
+}
+/* TOP BAR */
+.nav-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* HAMBURGUESA */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: 1px solid #fff;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 1.1rem;
+}
+
+/* MENU */
+.nav-menu {
+  justify-content: center;
+}
+
+/* =====================
+   MOBILE
+   ===================== */
+@media (max-width: 768px) {
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    margin-top: 12px;
+  }
+
+  /* Mostrar menú cuando está activo */
+  .navbar-portal.active .nav-menu {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 10px 0;
+  }
+
+  .btn-inicio,
+  .btn-gestion {
+    position: static;
+    transform: none;
+  }
+}
+@media (max-width: 768px) {
+
+  .nav-top {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Separación entre elementos */
+  .btn-inicio {
+    margin-right: auto;
+  }
+
+  .menu-toggle {
+    margin: 0 16px;
+  }
+
+  .btn-gestion {
+    margin-left: auto;
+  }
+
+}
+@media (max-width: 768px) {
+
+  .menu-toggle {
+    border-radius: 0;
+    padding: 6px 14px;
+  }
+
+}
+
+
+
+
 
 
   </style>
@@ -122,15 +270,28 @@
 <body>
 <nav class="navbar-portal">
 
-  <!-- Botón  -->
-  <a href="/gestion" class="btn btn-outline-light btn-sm btn-gestion">
-    Ir a sistema de gestión
-  </a>
+  <!-- Top bar -->
+  <div class="nav-top">
 
-  <!-- Links  -->
-  <ul class="nav justify-content-center">
+    <a href="/web" class="btn btn-outline-light btn-sm btn-inicio">
+      Inicio
+    </a>
+
+    <!-- Botón hamburguesa -->
+    <button class="menu-toggle" aria-label="Abrir menú">
+      ☰
+    </button>
+
+    <a href="/gestion" class="btn btn-outline-light btn-sm btn-gestion">
+      Gestión
+    </a>
+
+  </div>
+
+  <!-- Menú -->
+  <ul class="nav nav-menu">
     <li class="nav-item">
-      <a class="nav-link active" aria-current="page" href="/web/noticias">Noticias</a>
+      <a class="nav-link active" href="/web/noticias">Noticias</a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="/web/partidos">Partidos</a>
@@ -139,7 +300,10 @@
       <a class="nav-link" href="/web/equipos">Equipos</a>
     </li>
   </ul>
+
 </nav>
+
+
 <main class="contenido-principal">
   {% block content %}
   {% endblock %}
@@ -153,5 +317,16 @@
     <small>Todos los derechos reservados</small>
   </div>
 </footer>
+
+<script>
+  document.querySelector('.menu-toggle')
+    .addEventListener('click', () => {
+      document.querySelector('.navbar-portal')
+        .classList.toggle('active');
+    });
+</script>
+    {% block scripts %}
+    {% endblock %}
+
 </body>
 </html>
