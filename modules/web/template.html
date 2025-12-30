@@ -1,74 +1,157 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido - Torneo Acercamiento</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal de Noticias</title>
+  <link rel="stylesheet" href="/css/style-panel.css">
+    <link rel="stylesheet" href="/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="/css/switch.css">
+    <link rel="stylesheet" href="/css/style.css"> 
     <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-        }
-        .navbar {
-            background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%);
-        }
-        .navbar-brand, .nav-link, .btn-gestion {
-            color: #fff !important;
-            font-weight: bold;
-        }
-        .navbar-nav .nav-link.active {
-            text-decoration: underline;
-        }
-        .bienvenida {
-            margin-top: 80px;
-            text-align: center;
-        }
-        .bienvenida h1 {
-            font-size: 2.8rem;
-            font-weight: 900;
-            margin-bottom: 20px;
-        }
-        .bienvenida p {
-            font-size: 1.3rem;
-            color: #f1c40f;
-        }
-    </style>
+    html, body {
+    height: 100%;
+    margin: 0;
+    }
+
+    body {
+    display: flex;
+    flex-direction: column;
+    }
+    .contenido-principal {
+    flex: 1;
+    }
+
+
+    .navbar-portal {
+    position: relative;
+    background-color: #000;
+    padding: 18px 24px;
+    border-bottom: 1px solid #1a1a1a;
+    }
+
+    /* Botón derecha */
+    .btn-gestion {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 0;
+    border: 1px solid #fff;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    color: #fff;
+    }
+
+    .btn-gestion:hover {
+    background-color: #fff;
+    color: #000;
+    }
+
+    /* Links */
+    .navbar-portal .nav {
+    margin: 0;
+    }
+
+    .navbar-portal .nav-link {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    position: relative;
+    transition: color 0.2s ease;
+    }
+
+    .navbar-portal .nav-link:hover {
+    color: #cfcfcf;
+    }
+
+    /* Activo */
+    .navbar-portal .nav-link.active {
+    font-weight: 600;
+    }
+
+    /* Línea inferior */
+    .navbar-portal .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 0;
+    height: 2px;
+    background-color: #fff;
+    transform: translateX(-50%);
+    transition: width 0.25s ease;
+    }
+
+    .navbar-portal .nav-link:hover::after {
+    width: 55%;
+    }
+
+    .footer-portal {
+    background-color: #000;
+    color: #fff;
+    padding: 20px 0;
+    border-top: 1px solid #1a1a1a;
+    margin-top: 60px;
+    }
+
+    .footer-portal p {
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    }
+
+    .footer-portal small {
+    color: #bfbfbf;
+    }
+
+
+  </style>
     {% block styles %}
     {% endblock %}
+      
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <a class="navbar-brand" href="#">Torneo Acercamiento</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Inicio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#equipos">Equipos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#noticias">Noticias</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#partidos">Partidos</a>
-                </li>
-            </ul>
-            <a href="/gestion" class="btn btn-warning btn-gestion ml-auto">Sistema de Gestión</a>
-        </div>
-    </nav>
-    <div class="section" style="margin-top: 80px;">
-        {% block content %}
-        {% endblock %}
-    </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}
-    {% endblock %}
+<nav class="navbar-portal">
+
+  <!-- Botón  -->
+  <a href="/gestion" class="btn btn-outline-light btn-sm btn-gestion">
+    Ir a sistema de gestión
+  </a>
+
+  <!-- Links  -->
+  <ul class="nav justify-content-center">
+    <li class="nav-item">
+      <a class="nav-link active" aria-current="page" href="/web/noticias">Noticias</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/web/partidos">Partidos</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/web/equipos">Equipos</a>
+    </li>
+  </ul>
+</nav>
+<main class="contenido-principal">
+  {% block content %}
+  {% endblock %}
+</main>
+
+
+<footer class="footer-portal">
+  <div class="container text-center">
+    <p class="mb-1">© 2026 Basquet La Emilia</p>
+    <small>Desarrollado por LE Devs</small>
+    <small>Todos los derechos reservados</small>
+  </div>
+</footer>
 </body>
 </html>

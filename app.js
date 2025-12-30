@@ -13,6 +13,7 @@ const menues = require("./menu");
 const db = require("./database");
 
 
+
 app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -54,6 +55,9 @@ app.use(require("./modules/partidos/routes"));
 
 
 app.use(require("./modules/web/index/routes"));
+app.use(require("./modules/web/equipos/routes"));
+app.use(require("./modules/web/partidos/routes"));
+app.use(require("./modules/web/noticias/routes"));
 
 
 (async function () {
