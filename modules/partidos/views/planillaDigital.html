@@ -288,22 +288,135 @@
         background: rgba(255,255,255,0.5);
     }
 
-    /* Responsive para tablets */
+    /* Responsive para tablets y móviles */
     @media (max-width: 1024px) {
-        .score-number { font-size: 2rem; }
-        .timer-display { font-size: 1.3rem; padding: 6px 10px; }
-        .action-btn { min-height: 48px; font-size: 0.7rem; padding: 10px 4px; border-radius: 8px; }
-        .action-btn i { font-size: 1.2rem; }
-        .action-buttons { grid-template-columns: repeat(3, 1fr); }
+        .planilla-container { padding: 2px; }
+        
+        /* Encabezado ultra compacto */
+        .header-scoreboard { padding: 2px 3px; margin-bottom: 2px; }
+        .team-name { font-size: 0.55rem; margin-bottom: 0px; }
+        .score-number { font-size: 1rem; margin: 0; }
+        .timer-display { font-size: 0.7rem; padding: 2px 4px; }
+        .period-info { font-size: 0.55rem; margin-top: 0px; }
+        .team-stats { font-size: 0.5rem; margin-top: 1px; }
+        .team-stats div { margin: 0; line-height: 1; display: inline-block; margin-right: 5px; }
+        .team-stats button { display: none !important; } /* Ocultar botones timeout */
+        .header-scoreboard .btn { font-size: 0.5rem; padding: 1px 3px; }
+        .header-scoreboard .btn-xs { padding: 1px 2px; font-size: 0.5rem; }
+        .header-scoreboard .row { margin-left: -2px; margin-right: -2px; }
+        .header-scoreboard .col-md-4 { padding-left: 2px; padding-right: 2px; }
+        
+        /* Ocultar controles innecesarios */
+        .timer-central .mt-2 { display: none !important; }
+        .header-scoreboard .row.mt-2 { display: none !important; }
+        
+        /* Info jugador seleccionado MINI */
+        .selected-player-info { padding: 3px 5px; margin-bottom: 3px; }
+        .selected-player-info h4 { font-size: 0.65rem; margin-bottom: 1px; }
+        .selected-player-info .badge { font-size: 0.5rem; padding: 1px 3px; }
+        .actions-title { font-size: 0.6rem; margin-bottom: 3px; }
+        .actions-center { padding: 5px 2px; }
+        .no-player { padding: 8px; font-size: 0.65rem; }
+        .no-player i { font-size: 1rem !important; margin-bottom: 0.2rem !important; }
+        
+        /* Botones de acciones en grid 3x4 para ver todos */
+        .action-btn { min-height: 45px; font-size: 0.6rem; padding: 4px 2px; border-radius: 5px; }
+        .action-btn i { font-size: 1rem; margin-bottom: 1px; }
+        .action-btn span { line-height: 1; }
+        .action-buttons { grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 100%; }
+        
+        /* Jugadores MINI: solo puntos y faltas */
+        .player-stats span:not(.stat-puntos):not(.stat-faltas) { display: none !important; }
+        .player-item { padding: 2px 4px 3px 4px; min-height: 30px; margin: 2px 0; }
+        .player-number { font-size: 0.9rem; width: 24px; line-height: 24px; margin-right: 4px; }
+        .player-name { font-size: 0.6rem; margin-bottom: 0px; line-height: 1; }
+        .player-stats { font-size: 0.55rem; margin-top: 1px; }
+        .player-stats span { margin-right: 3px; padding: 1px 3px; }
+        .team-header { padding: 3px; margin-bottom: 3px; font-size: 0.65rem; }
+        .players-column { height: calc(100vh - 70px); padding: 0 2px; padding-bottom: 60px; }
     }
 
-    /* Más reducción para tablets pequeñas */
+    /* Más reducción para tablets pequeñas y móviles */
     @media (max-width: 800px) {
-        .score-number { font-size: 1.3rem; }
-        .timer-display { font-size: 1rem; padding: 4px 6px; }
-        .action-btn { min-height: 36px; font-size: 0.65rem; padding: 6px 2px; border-radius: 6px; }
-        .action-btn i { font-size: 1rem; }
-        .action-buttons { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .planilla-container { padding: 2px; }
+        
+        /* Encabezado ultra compacto */
+        .header-scoreboard { padding: 2px 3px; margin-bottom: 2px; }
+        .team-name { font-size: 0.55rem; margin-bottom: 0px; }
+        .score-number { font-size: 1rem; margin: 0; }
+        .timer-display { font-size: 0.7rem; padding: 2px 4px; }
+        .period-info { font-size: 0.55rem; margin-top: 0px; }
+        .team-stats { font-size: 0.5rem; margin-top: 1px; }
+        .team-stats div { margin: 0; line-height: 1; display: inline-block; margin-right: 5px; }
+        .team-stats button { display: none !important; } /* Ocultar botones timeout en header */
+        .header-scoreboard .btn { font-size: 0.5rem; padding: 1px 3px; }
+        .header-scoreboard .btn-xs { padding: 1px 2px; font-size: 0.5rem; }
+        .header-scoreboard .row { margin-left: -2px; margin-right: -2px; }
+        .header-scoreboard .col-md-4 { padding-left: 2px; padding-right: 2px; }
+        
+        /* Ocultar controles innecesarios */
+        .timer-central .mt-2 { display: none !important; } /* Ocultar play/pause/siguiente */
+        .header-scoreboard .row.mt-2 { display: none !important; } /* Ocultar comenzar/finalizar */
+        
+        /* Info jugador seleccionado MINI */
+        .selected-player-info { padding: 3px 5px; margin-bottom: 3px; }
+        .selected-player-info h4 { font-size: 0.65rem; margin-bottom: 1px; }
+        .selected-player-info .badge { font-size: 0.5rem; padding: 1px 3px; }
+        .actions-title { font-size: 0.6rem; margin-bottom: 3px; }
+        .actions-center { padding: 5px 2px; }
+        .no-player { padding: 8px; font-size: 0.65rem; }
+        .no-player i { font-size: 1rem !important; margin-bottom: 0.2rem !important; }
+        
+        /* Botones de acciones en grid 3x4 para ver todos */
+        .action-btn { min-height: 45px; font-size: 0.6rem; padding: 4px 2px; border-radius: 5px; }
+        .action-btn i { font-size: 1rem; margin-bottom: 1px; }
+        .action-btn span { line-height: 1; }
+        .action-buttons { grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 100%; }
+        
+        /* Jugadores MINI: solo puntos y faltas */
+        .player-stats span:not(.stat-puntos):not(.stat-faltas) { display: none !important; }
+        .player-item { padding: 2px 4px 3px 4px; min-height: 30px; margin: 2px 0; }
+        .player-number { font-size: 0.9rem; width: 24px; line-height: 24px; margin-right: 4px; }
+        .player-name { font-size: 0.6rem; margin-bottom: 0px; line-height: 1; }
+        .player-stats { font-size: 0.55rem; margin-top: 1px; }
+        .player-stats span { margin-right: 3px; padding: 1px 3px; }
+        .team-header { padding: 3px; margin-bottom: 3px; font-size: 0.65rem; }
+        .players-column { height: calc(100vh - 70px); padding: 0 2px; padding-bottom: 60px; }
+    }
+    
+    /* Reducción extrema para móviles muy pequeños */
+    @media (max-width: 600px) {
+        .planilla-container { padding: 1px; }
+        
+        /* Encabezado mínimo */
+        .header-scoreboard { padding: 1px 2px; margin-bottom: 1px; }
+        .team-name { font-size: 0.5rem; }
+        .score-number { font-size: 0.9rem; }
+        .timer-display { font-size: 0.6rem; padding: 1px 3px; }
+        .period-info { font-size: 0.5rem; }
+        .team-stats { font-size: 0.45rem; }
+        .team-stats div { display: inline-block; margin: 0 2px; }
+        
+        /* Panel de acciones mínimo */
+        .selected-player-info { padding: 2px 4px; margin-bottom: 2px; }
+        .selected-player-info h4 { font-size: 0.6rem; }
+        .selected-player-info .badge { font-size: 0.45rem; padding: 1px 3px; }
+        .actions-title { font-size: 0.55rem; margin-bottom: 2px; }
+        .actions-center { padding: 4px 2px; }
+        
+        /* Botones de acciones en 3 columnas compactos */
+        .action-btn { min-height: 40px; font-size: 0.55rem; padding: 3px 1px; }
+        .action-btn i { font-size: 0.9rem; }
+        .action-buttons { gap: 3px; }
+        
+        /* Jugadores ultra compactos */
+        .player-item { padding: 2px 3px 2px 3px; min-height: 26px; margin: 1px 0; }
+        .player-number { font-size: 0.8rem; width: 20px; line-height: 20px; margin-right: 3px; }
+        .player-name { font-size: 0.55rem; }
+        .player-stats { font-size: 0.5rem; }
+        .player-stats span { margin-right: 2px; padding: 0px 2px; }
+        .team-header { padding: 2px; margin-bottom: 2px; font-size: 0.6rem; }
+        .players-column { height: calc(100vh - 60px); padding: 0 1px; padding-bottom: 50px; }
     }
     
 
@@ -747,10 +860,10 @@
                     <div class="player-number">${jugador.dorsal}</div>
                     <div class="player-name">${jugador.nombre}</div>
                     <div class="player-stats">
-                        <span>PTS: ${stats.puntos || 0}</span>
-                        <span>REB: ${stats.rebotes || 0}</span>
-                        <span>AST: ${stats.asistencias || 0}</span>
-                        <span>FL: ${stats.faltas || 0}</span>
+                        <span class="stat-puntos">PTS: ${stats.puntos || 0}</span>
+                        <span class="stat-rebotes">REB: ${stats.rebotes || 0}</span>
+                        <span class="stat-asistencias">AST: ${stats.asistencias || 0}</span>
+                        <span class="stat-faltas">FL: ${stats.faltas || 0}</span>
                     </div>
                 </div>
             `;
