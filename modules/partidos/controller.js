@@ -167,6 +167,19 @@ exports.postRegistrarEstadistica = async (req, res) => {
     }
 }
 
+exports.postDeshacerUltimaAccion = async (req, res) => {
+    try {
+        const resDelete = await model.deshacerUltimoEvento(req.body.id_partido_fk);
+        if (resDelete.affectedRows == 0) {
+            return res.json({ status: false, icon: "error", title: "Error", text: "Hubo un error al procesar la solicitud" });
+        }
+        return res.json({ status: true, icon: "success", title: "Éxito", text: "Última acción deshecha correctamente" });
+    } catch (error) {
+        console.log(error);
+        return res.json({ status: false, icon: "error", title: "Error", text: "Hubo un error al procesar la solicitud" });
+    }
+}
+
 
 exports.postObtenerEstadisticas = async (req, res) => {
     try {

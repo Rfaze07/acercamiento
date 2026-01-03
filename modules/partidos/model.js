@@ -74,6 +74,14 @@ exports.insertarEvento = (o) => {
     `, [o.id_partido_fk, o.id_jugador_fk, o.evento, o.valor, o.periodo, o.tiempo_restante])
 }
 
+exports.deshacerUltimoEvento = (id_partido_fk) => {
+    return queryMYSQL(`
+        DELETE FROM eventos_partido
+        WHERE id_partido_fk = ?
+        ORDER BY id DESC
+        LIMIT 1
+    `, [id_partido_fk])
+}
 
 exports.getEventosByPartido = (id_partido_fk) => {
     return queryMYSQL(`
