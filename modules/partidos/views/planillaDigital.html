@@ -151,6 +151,19 @@
         color: #fff;
     }
 
+    .player-item.foul-out {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+        border-color: #c0392b;
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+        opacity: 0.85;
+    }
+
+    .player-item.foul-out .player-number,
+    .player-item.foul-out .player-name,
+    .player-item.foul-out .player-stats {
+        color: #fff !important;
+    }
+
     .player-number {
         font-size: 1.5rem;
         font-weight: 900;
@@ -596,11 +609,15 @@
                             <i class="fa fa-times"></i>
                             <span>Cancelar</span>
                         </button>
-                        <button class="action-btn deshacer" onclick="QuitarUltimaAccion()">
-                            <i class="fa fa-undo"></i>
-                            <span>Deshacer</span>
-                        </button>
                     </div>
+                </div>
+                
+                <!-- Botón Deshacer siempre visible -->
+                <div class="mt-3">
+                    <button class="action-btn deshacer" onclick="QuitarUltimaAccion()" style="width: 100%; max-width: 300px; margin: 0 auto; display: block;">
+                        <i class="fa fa-undo"></i>
+                        <span>Deshacer Última Acción</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -858,8 +875,11 @@
         partidoData.jugadores[tipo].forEach(jugador => {
             const stats = partidoData.estadisticas[tipo][jugador.id] || {};
             const isSelected = jugadorSeleccionado.id == jugador.id;
+            const totalFaltas = (stats.faltas || 0);
+            const hasFouledOut = totalFaltas >= 5;
+            
             html += `
-                <div class="player-item ${isSelected ? 'selected' : ''}" onclick="SeleccionarJugador('${tipo}', ${jugador.id}, '${jugador.nombre}', '${jugador.dorsal}')">
+                <div class="player-item ${isSelected ? 'selected' : ''} ${hasFouledOut ? 'foul-out' : ''}" onclick="SeleccionarJugador('${tipo}', ${jugador.id}, '${jugador.nombre}', '${jugador.dorsal}')">
                     <div class="player-number">${jugador.dorsal}</div>
                     <div class="player-name">${jugador.nombre}</div>
                     <div class="player-stats">
@@ -1161,65 +1181,66 @@
         // DesseleccionarJugador();
     };
 
-    const QuitarUltimaAccion = () => {
-        if (!ultimaAccion) {
+    const QuitarUltimaAccion = async () => {
+        if (!partidoData.id) {
             Swal.fire({
-                icon: 'info',
-                title: 'No hay acciones',
-                text: 'No hay acciones recientes para deshacer',
+                icon: 'warning',
+                title: 'Error',
+                text: 'No se ha cargado el partido',
                 timer: 2000
             });
             return;
         }
-        
-        // Verificar si la acción es reciente (último minuto)
-        if (Date.now() - ultimaAccion.timestamp > 60000) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Acción expirada',
-                text: 'Solo se pueden deshacer acciones de los últimos 60 segundos',
-                timer: 3000
+
+        try {
+            // Confirmar acción
+            const confirmacion = await Swal.fire({
+                icon: 'question',
+                title: '¿Deshacer última acción?',
+                text: 'Se revertirá la última acción registrada en el partido',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, deshacer',
+                cancelButtonText: 'Cancelar'
             });
-            return;
-        }
-        
-        // Restar la estadística
-        if (!partidoData.estadisticas[ultimaAccion.equipo][ultimaAccion.jugador_id]) {
-            return;
-        }
-        
-        partidoData.estadisticas[ultimaAccion.equipo][ultimaAccion.jugador_id][ultimaAccion.estadistica] -= ultimaAccion.valor;
-        
-        if (ultimaAccion.estadistica === 'puntos') {
-            if (ultimaAccion.equipo === 'local') {
-                partidoData.scoreLocal -= ultimaAccion.valor;
-            } else {
-                partidoData.scoreVisitante -= ultimaAccion.valor;
+
+            if (!confirmacion.isConfirmed) return;
+
+            // Llamar al backend para deshacer
+            const res = await $.post('/partidos/deshacerUltimaAccion', { 
+                id_partido_fk: partidoData.id 
+            });
+
+            if (!res.status) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: res.text || 'No se pudo deshacer la acción',
+                    timer: 2000
+                });
+                return;
             }
+
+            // Recargar la página para actualizar el frontend
+            Swal.fire({
+                icon: 'success',
+                title: 'Acción deshecha',
+                text: 'La última acción se ha revertido correctamente',
+                timer: 1000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            }).then(() => {
+                location.reload();
+            });
+        } catch (error) {
+            console.error('Error deshaciendo acción:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al deshacer la acción',
+                timer: 2000
+            });
         }
-        
-        if (ultimaAccion.estadistica === 'faltas') {
-            if (ultimaAccion.equipo === 'local') {
-                partidoData.faltasLocal--;
-            } else {
-                partidoData.faltasVisitante--;
-            }
-        }
-        
-        ActualizarInterfaz();
-        RenderizarJugadores(ultimaAccion.equipo);
-        GuardarEstadisticas();
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'Acción deshecha',
-            timer: 1500,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-        
-        ultimaAccion = null;
     };
 
 
