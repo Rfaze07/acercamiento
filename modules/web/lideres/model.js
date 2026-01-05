@@ -31,7 +31,7 @@ exports.getMayoresAsistidores = () => {
         from eventos_partido ep
         left join jugadores j on j.id = ep.id_jugador_fk
         left join equipos e on e.id = j.id_equipo_fk
-        WHERE ep.evento = 'asistencia'
+        WHERE ep.evento = 'asistencias'
         GROUP BY j.id
         ORDER BY asistenciasTotales DESC
         LIMIT 10`, [])

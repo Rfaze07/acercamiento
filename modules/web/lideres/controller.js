@@ -26,7 +26,6 @@ exports.getListaAjax = async (req, res) => {
             reboteadores,
             pegadores
         }
-        if(!data.length) return res.json({ status: false, icon:"warning", title: "Alerta", text: "No existen registros cargados" })
         res.json({ status: true, data })
     }
     catch (error) {
