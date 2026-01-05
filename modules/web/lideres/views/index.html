@@ -256,35 +256,19 @@
       </h4>
 
       <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle">
+        <table class="table table-posiciones text-center align-middle" id="tablaGoleadores">
           <thead>
             <tr>
               <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th>Partidos</th>
               <th>Puntos</th>
-              <th>Prom.</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="pos-1">
-              <td>1</td>
-              <td>Juan Pérez</td>
-              <td>Halcones</td>
-              <td>8</td>
-              <td>156</td>
-              <td>19.5</td>
-            </tr>
-
           </tbody>
         </table>
       </div>
-
-      <p class="nota-tabla mt-2 text-center">
-        * Promedio calculado en base a puntos y partidos jugados.
-      </p>
-
     </div>
 
   </div>
@@ -300,34 +284,20 @@
       </h4>
 
       <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle">
+        <table class="table table-posiciones text-center align-middle" id="tablaAsistencias">
           <thead>
             <tr>
               <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th>Partidos</th>
               <th>Asistencias</th>
-              <th>Prom.</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="pos-1">
-              <td>1</td>
-              <td>Pedro González</td>
-              <td>Halcones</td>
-              <td>8</td>
-              <td>72</td>
-              <td>9.0</td>
-            </tr>
+
           </tbody>
         </table>
       </div>
-
-      <p class="nota-tabla mt-2 text-center">
-        * Promedio calculado en base a asistencias y partidos jugados.
-      </p>
-
     </div>
 
   </div>
@@ -343,35 +313,20 @@
       </h4>
 
       <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle">
+        <table class="table table-posiciones text-center align-middle" id="tablaRebotes">
           <thead>
             <tr>
               <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th>Partidos</th>
               <th>Rebotes</th>
-              <th>Prom.</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="pos-1">
-              <td>1</td>
-              <td>Andrés Morales</td>
-              <td>Leones</td>
-              <td>8</td>
-              <td>94</td>
-              <td>11.8</td>
-            </tr>
 
           </tbody>
         </table>
       </div>
-
-      <p class="nota-tabla mt-2 text-center">
-        * Promedio calculado en base a rebotes y partidos jugados.
-      </p>
-
     </div>
 
   </div>
@@ -387,35 +342,20 @@
       </h4>
 
       <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle">
+        <table class="table table-posiciones text-center align-middle" id="tablaFaltas">
           <thead>
             <tr>
               <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th>Partidos</th>
               <th>Faltas</th>
-              <th>Prom.</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="pos-1">
-              <td>1</td>
-              <td>Martín López</td>
-              <td>Leones</td>
-              <td>8</td>
-              <td>32</td>
-              <td>4.0</td>
-            </tr>
 
           </tbody>
         </table>
       </div>
-
-      <p class="nota-tabla mt-2 text-center">
-        * Promedio calculado en base a faltas y partidos jugados.
-      </p>
-
     </div>
 
   </div>
@@ -446,26 +386,52 @@ const getLista = async () => {
         if (!res.status){
             return;
         }
-        const noticias = res.data;
-        for (let i = 0; i < noticias.length; i++) {
-            const noticia = noticias[i];
-            const card = $(`
-            <div class="col-12 col-lg-10">
-              <article class="card card-noticia mb-4">
-                <div class="card-body">
-                <h5 class="titulo">${noticia.titulo}</h5>
-                  <span class="subtitulo">${noticia.subtitulo}</span>
-                  
-                  <p class="card-text">
-                    ${noticia.descripcion}
-                  </p>
-
-                </div>
-              </article>
-            </div>
-            `);
-            $('#noticias-container').append(card);
+        const goleadores = res.data.goleadores;
+        for (let i = 0; i < goleadores.length; i++) {
+            const goleador = goleadores[i];
+            const row = `<tr class="pos-${i + 1}">
+                            <td>${i + 1}</td>
+                            <td>${goleador.jugador}</td>
+                            <td>${goleador.equipo}</td>
+                            <td>${goleador.puntosTotales}</td>
+                         </tr>`;
+            $('#tablaGoleadores tbody').append(row);
         }
+
+        const asistencias = res.data.asistidores;
+        for (let i = 0; i < asistencias.length; i++) {
+            const asistente = asistencias[i];
+            const row = `<tr class="pos-${i + 1}">
+                            <td>${i + 1}</td>
+                            <td>${asistente.jugador}</td>
+                            <td>${asistente.equipo}</td>
+                            <td>${asistente.asistenciasTotales}</td>
+                         </tr>`;
+            $('#tablaAsistencias tbody').append(row);
+        }
+        const rebotes = res.data.reboteadores;
+        for (let i = 0; i < rebotes.length; i++) {
+            const reboteador = rebotes[i];
+            const row = `<tr class="pos-${i + 1}">
+                            <td>${i + 1}</td>
+                            <td>${reboteador.jugador}</td>
+                            <td>${reboteador.equipo}</td>
+                            <td>${reboteador.rebotesTotales}</td>
+                         </tr>`;
+            $('#tablaRebotes tbody').append(row);
+        }
+        const faltas = res.data.pegadores;
+        for (let i = 0; i < faltas.length; i++) {
+            const jugadorFaltas = faltas[i];
+            const row = `<tr class="pos-${i + 1}">
+                            <td>${i + 1}</td>
+                            <td>${jugadorFaltas.jugador}</td>
+                            <td>${jugadorFaltas.equipo}</td>
+                            <td>${jugadorFaltas.faltasTotales}</td>
+                         </tr>`;
+            $('#tablaFaltas tbody').append(row);
+        }
+
         $('#preloaderAPP').hide();
     } catch (error) {
         console.error('Error al obtener la lista de noticias:', error);
