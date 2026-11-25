@@ -1116,27 +1116,74 @@ const ObtenerCmbProveedores2 = (selector, esFiltro) => {
 }
 
 
-const ObtenerCmbEquipos = (selector, esFiltro) => {
-    return new Promise(async (resolve, reject) => {
-        $("#preloaderAPP").show()
-        const res = await $.post('/equipos/getListaSelectAjax')
-        if(!res.status){
-            $("#preloaderAPP").hide()
-            Swal.fire(res.title, res.text, res.icon)
-            return resolve()
+const CargarOpcionesCmbBasquet = async (url, selectores, opciones = {}) => {
+    const ids = Array.isArray(selectores) ? selectores : [selectores]
+    $("#preloaderAPP").show()
+    try {
+        const res = await $.post(url, {
+            incluirInactivos: opciones.incluirInactivos ? 1 : 0
+        })
+        if (!res.status) {
+            await MostrarSwalSinPreloader(
+                res.title || "Error",
+                res.text || "No se pudieron cargar las opciones",
+                res.icon || "error"
+            )
+            return false
         }
-        let html = '<option value="" disabled selected>Seleccione una opción...</option>'
-        if(esFiltro) html = '<option value="t" selected>Todos</option>'
-        if(res.data.length > 0){
-            res.data.map(el => {
-                html += `<option value="${el.id}">${el.nombre}</option>`
-            })
+        if (!Array.isArray(res.data)) throw new Error("La respuesta de opciones no es válida")
+
+        for (const id of ids) {
+            const $select = $(`#${id}`)
+            if (!$select.length) throw new Error(`No se encontró el selector #${id}`)
+            if (!opciones.anexar) {
+                $select.empty()
+                if (opciones.esFiltro) {
+                    $select.append($("<option>").val("t").text("Todos"))
+                } else {
+                    $select.append(
+                        $("<option>")
+                            .val("")
+                            .prop("disabled", true)
+                            .prop("selected", true)
+                            .text("Seleccione una opción...")
+                    )
+                }
+            }
+
+            for (const equipo of res.data) {
+                const nombre = equipo.nombre || ""
+                const etiqueta = opciones.incluirInactivos && Number(equipo.activo) !== 1
+                    ? `${nombre} (Inactivo)`
+                    : nombre
+                $select.append($("<option>").val(equipo.id).text(etiqueta))
+            }
+
+            if ($select.hasClass("selectpicker")) {
+                $select.selectpicker("refresh")
+                if (opciones.esFiltro && !opciones.anexar) $select.selectpicker("val", "t")
+            } else if (opciones.esFiltro && !opciones.anexar) {
+                $select.val("t")
+            }
         }
-        $(`#${selector}`).html(html)
-         $(`#${selector}`).selectpicker('refresh')
-        if(esFiltro) $(`#${selector}`).selectpicker('val', 't')
+        return true
+    } catch (error) {
+        console.error(error)
+        await MostrarSwalSinPreloader("Error", error.message || "No se pudieron cargar las opciones", "error")
+        return false
+    } finally {
         $("#preloaderAPP").hide()
-        return resolve()
     }
-    )
 }
+
+const ObtenerCmbEquipos = (selector, esFiltro, opciones = {}) =>
+    CargarOpcionesCmbBasquet("/equipos/getListaSelectAjax", selector, {
+        ...opciones,
+        esFiltro
+    })
+
+const ObtenerCmbClubes = (selector, opciones = {}) =>
+    CargarOpcionesCmbBasquet("/clubes/getListaSelectAjax", selector, opciones)
+
+const ObtenerCmbTiposCompetencia = (selector, opciones = {}) =>
+    CargarOpcionesCmbBasquet("/tiposCompetencia/getListaSelectAjax", selector, opciones)

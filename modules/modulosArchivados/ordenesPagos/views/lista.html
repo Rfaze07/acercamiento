@@ -63,7 +63,7 @@
                 <div class="row">
                     <div class="col-sm-12 col-md-8">
                         <label for="cmbProveedor">Proveedor</label>
-                        <select class="form-control form-control-sm" id="cmbProveedor">
+                        <select class="form-control form-control-sm selectpicker" id="cmbProveedor">
                             {% for p in proveedores %}
                                 <option value="{{ p.id }}">{{ p.razon_social }}</option>
                             {% endfor %}

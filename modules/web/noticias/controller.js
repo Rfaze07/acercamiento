@@ -16,12 +16,11 @@ exports.getLista = async (req, res) => {
 
 exports.getListaAjax = async (req, res) => {
     try {
-        let data = await model.getAll()
-        if(!data.length) return res.json({ status: false, icon:"warning", title: "Alerta", text: "No existen registros cargados" })
+        const data = await model.getAll()
         res.json({ status: true, data })
     }
     catch (error) {
-        console.log(error)
-        return res.json({ status: false, con:"", title: "Error", text: "Hubo un error al procesar la solicitud" })
+        console.error(error)
+        return res.status(500).json({ status: false, text: "Hubo un error al procesar la solicitud" })
     }
 }

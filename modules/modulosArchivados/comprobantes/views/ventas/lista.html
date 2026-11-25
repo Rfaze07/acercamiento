@@ -17,7 +17,7 @@
         <input type="text" class="form-control form-control-sm" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
         <div>
             <label>Empresa</label>
-            <select class="form-control form-control-sm" id="cmbEmpresaFiltro" onchange="getLista()">
+            <select class="form-control form-control-sm selectpicker" id="cmbEmpresaFiltro" onchange="getLista()">
                 <option value="t">Todas</option>
                 {% for e in empresas %}
                     <option value="{{ e.id }}">({{ e.cuit }}) - {{ e.razon_social }}</option>
@@ -73,7 +73,7 @@
                 <div class="row">
                     <div class="form-group col-sm-12">
                         <label for="cmbEmpresa">Empresa</label>
-                        <select class="form-control form-control-sm" id="cmbEmpresa" onchange="CargarCmbPuntosVentasEmpresa(this.value)">
+                        <select class="form-control form-control-sm selectpicker" id="cmbEmpresa" onchange="CargarCmbPuntosVentasEmpresa(this.value)">
                             <option value="" disabled selected>Seleccione una empresa...</option>
                             {% for e in empresas %}
                                 <option value="{{ e.id }}">({{ e.cuit }}) - {{ e.razon_social }}</option>
@@ -84,7 +84,7 @@
                 <div class="row">
                     <div class="form-group col-sm-12">
                         <label for="cmbCliente">Cliente</label>
-                        <select class="form-control form-control-sm" id="cmbCliente" onchange="ObtenerProyectosClientes(this.value)"></select>
+                        <select class="form-control form-control-sm selectpicker" id="cmbCliente" onchange="ObtenerProyectosClientes(this.value)"></select>
                     </div>
                 </div>
                 <div class="d-none" id="divDatos">
@@ -95,7 +95,7 @@
                         </div>
                         <div class="form-group col-sm-12 col-md-6">
                             <label for="cmbConceptos">Concepto</label>
-                            <select class="form-control form-control-sm disabled" id="cmbConceptos" disabled></select>
+                            <select class="form-control form-control-sm disabled selectpicker" id="cmbConceptos" disabled></select>
                         </div>
                     </div>
                     <div class="row d-none" id="divConcepto">
@@ -115,11 +115,11 @@
                     <div class="row">
                         <div class="form-group col-sm-12 col-md-6">
                             <label for="cmbPuntoVenta">Punto de venta</label>
-                            <select class="form-control form-control-sm" id="cmbPuntoVenta" onchange="SeleccionoPuntoVenta(this.value)"></select>
+                            <select class="form-control form-control-sm selectpicker" id="cmbPuntoVenta" onchange="SeleccionoPuntoVenta(this.value)"></select>
                         </div>
                         <div class="form-group col-sm-12 col-md-6">
                             <label for="cmbTipoComprobante">Tipo comprobante</label>
-                            <select class="form-control form-control-sm" id="cmbTipoComprobante" disabled></select>
+                            <select class="form-control form-control-sm selectpicker" id="cmbTipoComprobante" disabled></select>
                         </div>
                         <!-- <div class="form-group col-sm-12 col-md-4">
                             <label for="txtNroComprobante">Nro. comprobante</label>
@@ -129,7 +129,7 @@
                     <div class="row">
                         <div class="form-group col-sm-12">
                             <label for="cmbProyectos">Proyectos</label>
-                            <select class="form-control form-control-sm" id="cmbProyectos" disabled></select>
+                            <select class="form-control form-control-sm selectpicker" id="cmbProyectos" disabled></select>
                         </div>
                     </div>
                     <div class="dropdown-divider d-none" id="actionSeccionDivider"></div>

@@ -1,0 +1,288 @@
+{% extends '../../template.html' %}
+
+{% block content %}
+<div class="page-toolbar">
+    <h2 class="page-title">{{ pagename }}</h2>
+    <div class="page-filters">
+        <input type="text" class="form-control form-control-sm" id="txtFiltro" placeholder="Buscar">
+        <div>
+            <label for="cmbTipoFiltro">Competencia</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbTipoFiltro" onchange="getLista()">
+                <option value="t">Todos</option>
+            </select>
+        </div>
+        <div>
+            <label for="cmbEstadoFiltro">Estado</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbEstadoFiltro" onchange="getLista()">
+                <option value="t">Todos</option>
+                <option value="planificacion">Planificación</option>
+                <option value="inscripcion">Inscripción</option>
+                <option value="en_curso">En curso</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+        </div>
+        <div>
+            <label for="cmbActivoFiltro">Activos</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbActivoFiltro" onchange="getLista()">
+                <option value="t">Todos</option>
+                <option value="1" selected>Sí</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+        {% if permisos.a == 1 %}
+        <button type="button" id="btnNuevo" class="btn btn-sm btn-round btn-success" title="Nuevo torneo">
+            <i class="fa fa-plus"></i>
+        </button>
+        {% endif %}
+    </div>
+</div>
+<div class="table-responsive page-table" id="tablaDatos">
+    <table class="table table-sm table-fix table-hover tableFixHead">
+        <thead>
+            <tr>
+                <th scope="col">Acciones</th>
+                <th scope="col">Torneo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Temporada</th>
+                <th scope="col">Fechas</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Activo</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="modal fade modal-m" data-backdrop="static" tabindex="-1" aria-hidden="true" id="modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel"></h5>
+                <button type="button" class="close" aria-label="Close" onclick="CerrarModal()"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="form-group col-md-8">
+                        <label for="nombre">Nombre del torneo</label>
+                        <input type="text" class="form-control form-control-sm" id="nombre" maxlength="120">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="cmbTipo">Tipo de competencia</label>
+                        <select class="form-control form-control-sm selectpicker" id="cmbTipo"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <label for="temporada">Temporada</label>
+                        <input type="text" class="form-control form-control-sm" id="temporada" maxlength="20" placeholder="Ej.: 2026">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="fecha_inicio">Fecha de inicio</label>
+                        <input type="date" class="form-control form-control-sm" id="fecha_inicio">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="fecha_fin">Fecha de finalización</label>
+                        <input type="date" class="form-control form-control-sm" id="fecha_fin">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea class="form-control form-control-sm" id="descripcion" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="cmbEstado">Estado</label>
+                    <select class="form-control form-control-sm selectpicker" id="cmbEstado">
+                        <option value="planificacion">Planificación</option>
+                        <option value="inscripcion">Inscripción</option>
+                        <option value="en_curso">En curso</option>
+                        <option value="finalizado">Finalizado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group d-none text-center" id="actionSeccion">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="chbActivo">
+                        <label class="custom-control-label" for="chbActivo">Activo</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="CerrarModal()">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnAccion">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const escapar = valor => $('<div>').text(valor == null ? '' : valor).html()
+    const estadosTorneo = {
+        planificacion: 'Planificación',
+        inscripcion: 'Inscripción',
+        en_curso: 'En curso',
+        finalizado: 'Finalizado',
+        cancelado: 'Cancelado'
+    }
+
+    const getLista = async () => {
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post('/torneos/getListaAjax', {
+                tipo: $('#cmbTipoFiltro').val(),
+                estado: $('#cmbEstadoFiltro').val(),
+                activo: $('#cmbActivoFiltro').val()
+            })
+            let html = ''
+            if (res.status && res.data.length) {
+                for (const torneo of res.data) {
+                    const fechas = [torneo.fecha_inicio, torneo.fecha_fin].filter(Boolean).join(' - ') || '—'
+                    html += `<tr>
+                        <td><div style="display:flex;gap:2px;">
+                            {% if permisos.c == 1 %}
+                            <a class="btn btn-round btn-sm btn-info" title="Organizar torneo" href="/torneos/${Number(torneo.id)}/organizacion"><i class="fa fa-sitemap"></i></a>
+                            {% endif %}
+                            {% if permisos.m == 1 %}
+                            <button class="btn btn-round btn-sm btn-warning" title="Modificar" onclick="ModalAccion('m',${Number(torneo.id)})"><i class="fa fa-pen"></i></button>
+                            {% endif %}
+                            {% if permisos.b == 1 %}
+                            <button class="btn btn-round btn-sm btn-danger" title="Dar de baja" onclick="Eliminar(${Number(torneo.id)})"><i class="fa fa-trash-alt"></i></button>
+                            {% endif %}
+                        </div></td>
+                        <td class="search">${escapar(torneo.nombre)}</td>
+                        <td>${escapar(torneo.tipo_competencia)}</td>
+                        <td>${escapar(torneo.temporada || '—')}</td>
+                        <td>${escapar(fechas)}</td>
+                        <td>${estadosTorneo[torneo.estado] || escapar(torneo.estado)}</td>
+                        <td>${torneo.activo === 1 ? 'Sí' : 'No'}</td>
+                    </tr>`
+                }
+            } else {
+                html = `<tr><td colspan="7">${escapar(res.text || 'No existen registros cargados')}</td></tr>`
+            }
+            $('#tablaDatos tbody').html(html)
+        } catch (error) {
+            console.error(error)
+            $('#tablaDatos tbody').html('<tr><td colspan="7">No se pudo cargar la lista de torneos.</td></tr>')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const ModalAccion = async (accion, id) => {
+        $('#nombre, #temporada, #fecha_inicio, #fecha_fin, #descripcion').val('')
+        $('#cmbTipo').val('')
+        $('#cmbEstado').val('planificacion')
+        $('#chbActivo').prop('checked', true)
+        $('#actionSeccion').toggleClass('d-none', accion === 'a')
+        if (accion === 'a') {
+            $('#modalLabel').text('Nuevo torneo')
+            $('#btnAccion').off('click').on('click', () => PostRegistro('a'))
+        } else {
+            $('#preloaderAPP').show()
+            try {
+                const res = await $.post('/torneos/getByIdAjax', { id })
+                if (!res.status) throw new Error(res.text)
+                $('#nombre').val(res.data.nombre)
+                $('#temporada').val(res.data.temporada || '')
+                $('#fecha_inicio').val(res.data.fecha_inicio || '')
+                $('#fecha_fin').val(res.data.fecha_fin || '')
+                $('#descripcion').val(res.data.descripcion || '')
+                $('#cmbTipo').val(res.data.id_tipo_competencia_fk)
+                $('#cmbEstado').val(res.data.estado)
+                $('#chbActivo').prop('checked', res.data.activo === 1)
+                $('#modalLabel').text('Modificar torneo')
+                $('#btnAccion').off('click').on('click', () => PostRegistro('m', id))
+            } catch (error) {
+                await MostrarSwalSinPreloader('Error', error.message || 'No se pudo cargar el torneo', 'error')
+                return
+            } finally {
+                $('#preloaderAPP').hide()
+            }
+        }
+        $('#modal').modal('show')
+    }
+
+    const PostRegistro = async (accion, id) => {
+        $('#preloaderAPP').show()
+        try {
+            const body = {
+                nombre: $('#nombre').val(),
+                id_tipo_competencia_fk: $('#cmbTipo').val(),
+                temporada: $('#temporada').val(),
+                fecha_inicio: $('#fecha_inicio').val(),
+                fecha_fin: $('#fecha_fin').val(),
+                descripcion: $('#descripcion').val(),
+                estado: $('#cmbEstado').val()
+            }
+            const url = accion === 'a' ? '/torneos/alta' : '/torneos/modificar'
+            if (accion === 'm') {
+                body.id = id
+                body.activo = $('#chbActivo').prop('checked') ? 1 : 0
+            }
+            const res = await $.post(url, body)
+            await MostrarSwalSinPreloader(res.title, res.text, res.icon)
+            if (res.status) {
+                CerrarModal()
+                await getLista()
+            }
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', 'No se pudo guardar el torneo.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const Eliminar = async id => {
+        const confirmacion = await Swal.fire({
+            title: 'Dar de baja',
+            text: 'El torneo y sus datos relacionados se conservarán. ¿Desea continuar?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, dar de baja',
+            cancelButtonText: 'Cancelar'
+        })
+        if (!confirmacion.isConfirmed) return
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post('/torneos/eliminar', { id })
+            await MostrarSwalSinPreloader(res.title, res.text, res.icon)
+            if (res.status) await getLista()
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', 'No se pudo dar de baja el torneo.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const Filtrar = () => {
+        const filtro = $('#txtFiltro').val().toUpperCase()
+        $('#tablaDatos tbody tr').each(function () {
+            $(this).toggle($(this).find('td.search').text().toUpperCase().includes(filtro))
+        })
+    }
+
+    const CerrarModal = () => {
+        $('#modal').modal('hide')
+        $('#actionSeccion').addClass('d-none')
+        $('#nombre, #temporada, #fecha_inicio, #fecha_fin, #descripcion').val('')
+        $('#cmbTipo').val('')
+        $('#cmbEstado').val('planificacion')
+        $('#chbActivo').prop('checked', false)
+    }
+
+    $('#txtFiltro').on('input', Filtrar)
+    $('#btnNuevo').on('click', () => ModalAccion('a'))
+    $(document).ready(async () => {
+        await ObtenerCmbTiposCompetencia(['cmbTipoFiltro', 'cmbTipo'], {
+            incluirInactivos: true,
+            anexar: true
+        })
+        await getLista()
+    })
+</script>
+{% endblock %}

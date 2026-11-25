@@ -14,7 +14,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label for="empleado"><b>Empleado</b></label>
-                <select id="empleado"class="form-control" onchange="GeneroUserPass(this.value)"></select>
+                <select id="empleado"class="form-control selectpicker" onchange="GeneroUserPass(this.value)"></select>
             </div>
         </div>
         <div class="col-md-4">
@@ -38,7 +38,7 @@
         <div class="col-md-6" id="divNiveles">
             <div class="form-group">
                 <label for="clave"><b>Niveles</b></label>
-                <select id="niveles"class="form-control">
+                <select id="niveles"class="form-control selectpicker">
                     {% if nivel.indexOf('Administrador') > -1 || nivel.indexOf('Developer') > -1 %}
                         <option selected value="Administrador">Administrador</option>
                     {% endif %}

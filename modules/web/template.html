@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="/css/bootstrap-select.min.css">
     <link rel="stylesheet" href="/css/switch.css">
     <link rel="stylesheet" href="/css/style.css"> 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     
 
@@ -309,6 +308,339 @@
   width: auto;
 }
 
+body {
+  min-height: 100vh;
+  background: #fff;
+  color: #171717;
+}
+
+.contenido-principal {
+  width: 100%;
+}
+
+.navbar-portal {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: block;
+  padding: 0 1.5rem;
+  border-bottom: 3px solid #c89b3c;
+  background: #101010;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .18);
+  text-align: left;
+}
+
+.navbar-portal .nav-top {
+  max-width: 1280px;
+  min-height: 78px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-portal .btn-inicio,
+.navbar-portal .btn-gestion {
+  position: static;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  transform: none;
+  color: #fff;
+}
+
+.navbar-portal .btn-gestion {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+}
+
+.navbar-portal .btn-gestion:hover {
+  border-color: #d3a742;
+  background: rgba(200, 155, 60, .15);
+  color: #fff;
+}
+
+.nav-logo {
+  width: auto;
+  height: 46px;
+  object-fit: contain;
+}
+
+.navbar-portal .nav-menu {
+  display: flex;
+  max-width: 1280px;
+  justify-content: center;
+  gap: .35rem;
+  margin: 0 auto;
+  padding: 0 0 .65rem;
+  list-style: none;
+}
+
+.navbar-portal .nav-link {
+  padding: .7rem 1rem;
+  border-radius: .65rem;
+  color: rgba(255,255,255,.76);
+  font-size: .78rem;
+  font-weight: 750;
+  letter-spacing: .08em;
+  transition: background .2s ease, color .2s ease;
+}
+
+.navbar-portal .nav-icon {
+  display: none;
+}
+
+.navbar-portal .nav-link::after {
+  display: none;
+}
+
+.navbar-portal .nav-link:hover,
+.navbar-portal .nav-link.active {
+  background: rgba(255,255,255,.09);
+  color: #fff;
+}
+
+.navbar-portal .nav-link.active {
+  box-shadow: inset 0 -2px #c89b3c;
+}
+
+.menu-toggle {
+  display: none;
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+}
+
+.footer-portal {
+  margin-top: 3rem;
+  padding: 2.5rem 1rem 1.5rem;
+  background: #101010;
+  color: #d7dce2;
+}
+
+.footer-portal h6 {
+  color: #d3ad5a;
+  font-weight: 750;
+}
+
+.footer-gestion {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  margin: 0 0 0 .25rem !important;
+  border: 1px solid rgba(200, 155, 60, .55);
+  border-radius: 999px;
+  padding: .15rem .55rem;
+  color: #d3ad5a !important;
+  font-size: .75rem !important;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.footer-gestion:hover {
+  background: #c89b3c;
+  color: #111 !important;
+}
+
+.footer-contactos {
+  flex-wrap: wrap;
+  gap: .5rem 1.25rem !important;
+}
+
+.contacto-item {
+  margin: 0;
+  font-size: .9rem;
+}
+
+:root {
+  --portal-black: #101010;
+  --portal-white: #fff;
+  --portal-gold: #c89b3c;
+  --portal-gold-dark: #9b7428;
+  --portal-ink: #171717;
+  --portal-muted: #696969;
+  --portal-border: #e7e2d7;
+}
+
+.web-filtros {
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--portal-border);
+  border-radius: .85rem;
+  padding: 1.15rem 1.25rem .25rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .045);
+}
+
+.web-filtros-cabecera {
+  margin-bottom: 1rem;
+}
+
+.web-filtros-kicker {
+  color: var(--portal-gold-dark);
+  font-size: .7rem;
+  font-weight: 850;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.web-filtros-cabecera h2 {
+  margin: .25rem 0;
+  color: var(--portal-ink);
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.web-filtros-cabecera p {
+  margin: 0;
+  color: var(--portal-muted);
+  font-size: .85rem;
+}
+
+.web-filtro-label {
+  display: block;
+  margin-bottom: .35rem;
+  color: var(--portal-ink);
+  font-size: .8rem;
+  font-weight: 750;
+}
+
+.web-filtros .bootstrap-select > .dropdown-toggle {
+  min-height: 42px;
+  border: 1px solid #d8d8d8;
+  border-radius: .4rem;
+  background: #fff;
+  color: var(--portal-ink);
+}
+
+.web-filtros .bootstrap-select > .dropdown-toggle:focus {
+  outline: 2px solid rgba(200, 155, 60, .35) !important;
+  outline-offset: 1px;
+}
+
+.web-filtros .dropdown-item.active,
+.web-filtros .dropdown-item:active {
+  background: var(--portal-black);
+  color: #fff;
+}
+
+.btn-web-buscar {
+  min-height: 42px;
+  border: 1px solid var(--portal-gold);
+  border-radius: .4rem;
+  background: var(--portal-gold);
+  color: #111;
+  font-weight: 850;
+}
+
+.btn-web-buscar:hover,
+.btn-web-buscar:focus {
+  border-color: var(--portal-gold-dark);
+  background: var(--portal-gold-dark);
+  color: #fff;
+}
+
+.btn-web-buscar:disabled {
+  border-color: #dedede;
+  background: #ededed;
+  color: #777;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .navbar-portal {
+    display: block;
+    padding: 0 .85rem;
+  }
+
+  .navbar-portal .nav-top {
+    min-height: 64px;
+    justify-content: center;
+  }
+
+  .nav-logo {
+    height: 37px;
+  }
+
+  .navbar-portal .btn-inicio {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .navbar-portal .nav-menu {
+    display: flex;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1200;
+    width: 100%;
+    max-width: none;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 0;
+    margin: 0;
+    border-top: 2px solid var(--portal-gold);
+    padding: .3rem .15rem calc(.3rem + env(safe-area-inset-bottom));
+    background: var(--portal-black);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, .18);
+  }
+
+  .navbar-portal .nav-item {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navbar-portal .nav-link {
+    display: flex;
+    min-height: 54px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .2rem;
+    padding: .35rem .1rem;
+    font-size: .58rem;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
+  .navbar-portal .nav-icon {
+    display: block;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .navbar-portal .nav-link.active {
+    background: rgba(200, 155, 60, .12);
+    box-shadow: none;
+    color: #d3ad5a;
+  }
+
+  .footer-portal {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar-portal .nav-top {
+    min-height: 58px;
+  }
+
+  .nav-logo {
+    height: 31px;
+  }
+
+}
+
   </style>
     {% block styles %}
     {% endblock %}
@@ -316,7 +648,7 @@
 </head>
 
 <body>
-<nav class="navbar-portal">
+<nav class="navbar-portal" aria-label="Navegación principal">
 
   <!-- Top bar -->
   <div class="nav-top d-flex align-items-center gap-2">
@@ -328,34 +660,24 @@
       <img src="/img/logo-basquet.png" alt="Básquet" class="nav-logo">
     </a>
 
-    <!-- Botón hamburguesa -->
-    <button class="menu-toggle btn btn-sm" aria-label="Abrir menú">
-      ☰
-    </button>
-
-    <!-- Botón de gestión -->
-    <a href="/gestion" class="btn btn-gestion">
-      <i class="bi bi-gear-fill fs-4"></i> 
-    </a>
-
   </div>
 
   <!-- Menú -->
-  <ul class="nav nav-menu">
+  <ul class="nav nav-menu" id="portal-menu">
     <li class="nav-item">
-      <a class="nav-link active" href="/">Inicio</a>
+      <a class="nav-link" href="/"><i class="bi bi-house-fill nav-icon" aria-hidden="true"></i><span>Inicio</span></a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active" href="/web/noticias">Noticias</a>
+      <a class="nav-link" href="/web/noticias"><i class="bi bi-newspaper nav-icon" aria-hidden="true"></i><span>Noticias</span></a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="/web/lideres">Líderes</a>
+      <a class="nav-link" href="/web/lideres"><i class="bi bi-bar-chart-fill nav-icon" aria-hidden="true"></i><span>Líderes</span></a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="/web/partidos">Partidos</a>
+      <a class="nav-link" href="/web/partidos"><i class="bi bi-calendar-event-fill nav-icon" aria-hidden="true"></i><span>Partidos</span></a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="/web/equipos">Equipos</a>
+      <a class="nav-link" href="/web/equipos"><i class="bi bi-people-fill nav-icon" aria-hidden="true"></i><span>Equipos</span></a>
     </li>
   </ul>
 
@@ -393,7 +715,12 @@
 
     <!-- Derechos -->
     <p class="mb-1">© 2026 Basquet La Emilia</p>
-    <small class="d-block">Desarrollado por LE Devs</small>
+    <small class="d-block">Desarrollado por
+      <a class="footer-gestion" href="/gestion" aria-label="Ir al panel de gestión">
+        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+        <span>LE Devs</span>
+      </a>
+    </small>
     <small class="d-block">Todos los derechos reservados</small>
 
   </div>
@@ -436,11 +763,16 @@
     <script type="text/javascript" src="/js/main.js"></script>
     <script type="text/javascript" src="/js/funcionesSelect.js"></script>
 <script>
-  document.querySelector('.menu-toggle')
-    .addEventListener('click', () => {
-      document.querySelector('.navbar-portal')
-        .classList.toggle('active');
-    });
+  const portalMenu = document.querySelector('#portal-menu');
+  const portalPath = window.location.pathname.replace(/\/+$/, '') || '/';
+
+  portalMenu.querySelectorAll('a[href]').forEach(link => {
+    const linkPath = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+    const isCurrent = portalPath === linkPath ||
+      (linkPath === '/web/partidos' && portalPath === '/web/detallePartidos');
+    link.classList.toggle('active', isCurrent);
+    if (isCurrent) link.setAttribute('aria-current', 'page');
+  });
 </script>
     {% block scripts %}
     {% endblock %}

@@ -8,6 +8,9 @@ router.get('/partidos', auth, checkAcceso('c'), controller.getLista)
 router.get('/partidos/planillaDigital', auth, checkAcceso('c'), controller.getPlanillaDigital)
 router.post('/partidos/getlistaAjax', auth, checkAcceso('c'), controller.getListaAjax)
 router.post('/partidos/getListaSelectAjax', auth, controller.getListaSelectAjax)
+router.post('/partidos/getCategoriasParaPartidoAjax', auth, checkAcceso('c'), controller.getCategoriasParaPartido)
+router.post('/partidos/getOpcionesClasificacionAjax', auth, checkAcceso('c'), controller.getOpcionesClasificacion)
+router.post('/partidos/getEquiposPorCategoriaAjax', auth, checkAcceso('c'), controller.getEquiposPorCategoria)
 router.post('/partidos/alta', auth, checkAcceso('a'), controller.postAlta)
 router.post('/partidos/getByIdAjax', auth, checkAcceso('c'), controller.getById)
 router.post('/partidos/modificar', auth, checkAcceso('m'), controller.postModificar)
@@ -20,5 +23,8 @@ router.post('/partidos/actualizarEstado', auth, checkAcceso('m'), controller.pos
 router.post('/partidos/registrarEstadistica', auth, checkAcceso('m'), controller.postRegistrarEstadistica);
 router.post('/partidos/deshacerUltimaAccion', auth, checkAcceso('m'), controller.postDeshacerUltimaAccion);
 router.post('/partidos/obtenerEstadisticas', auth, checkAcceso('c'), controller.postObtenerEstadisticas);
+router.post('/partidos/getConvocatoriaAjax', auth, checkAcceso('c'), controller.getConvocatoriaAjax)
+router.post('/partidos/guardarConvocatoria', auth, checkAcceso('m'), controller.postGuardarConvocatoria)
+router.post('/partidos/registrarSustitucion', auth, checkAcceso('m'), controller.postRegistrarSustitucion)
 
 module.exports = router
