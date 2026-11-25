@@ -139,6 +139,36 @@
         min-height: 48px;
     }
 
+    .player-section-title {
+        color: #bdc3c7;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        padding: 3px 0;
+    }
+
+    .player-item.bench-player {
+        cursor: default;
+        opacity: 0.9;
+    }
+
+    .player-item.bench-player:hover {
+        transform: none;
+    }
+
+    .btn-sustitucion {
+        float: right;
+        margin-top: 3px;
+    }
+
+    #opcionesLocal,
+    #opcionesVisitante {
+        max-height: 35vh;
+        overflow-y: auto;
+        padding: 0 5px;
+    }
+
     .player-item:hover {
         background: rgba(255,255,255,0.2);
         transform: translateX(5px);
@@ -439,27 +469,6 @@
 </style>
 </head>
 <body>
-            <style>
-            .swal2-container {
-                z-index: 2147483647 !important;
-            }
-            </style>
-            <script>
-            
-            // --- DEBUG: Mostrar un Swal justo antes y después de la alerta de 5 faltas ---
-            window._swalDebug = function(msg) {
-                if (typeof Swal !== 'undefined' && Swal.fire) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'DEBUG',
-                        text: msg,
-                        timer: 2000
-                    });
-                } else {
-                    alert(msg);
-                }
-            };
-            </script>
     <!-- Preloader -->
     <div id="preloaderAPP" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">
@@ -533,21 +542,50 @@
                 <button id="btnComenzarPartido" class="btn btn-success mr-2" onclick="ComenzarPartido()">
                     <i class="fa fa-flag-checkered"></i> Comenzar Partido
                 </button>
+                <button id="btnEditarConvocatoria" class="btn btn-info mr-2 d-none" onclick="MostrarConvocatoria(true)">
+                    <i class="fa fa-users"></i> Editar convocatoria
+                </button>
                 <button id="btnFinalizarPartido" class="btn btn-danger" onclick="FinalizarPartidoPersonalizado()" disabled>
                     <i class="fa fa-flag"></i> Finalizar Partido
                 </button>
             </div>
         </div>
 
+    <div id="panelConvocatoria" class="card bg-dark text-white my-2 d-none">
+        <div class="card-body py-2">
+            <h5>Convocatoria del partido</h5>
+            <p class="mb-2">Elegí los jugadores participantes y marcá exactamente cinco titulares por equipo.</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 id="tituloOpcionesLocal">Equipo A</h6>
+                    <div id="opcionesLocal"></div>
+                </div>
+                <div class="col-md-6">
+                    <h6 id="tituloOpcionesVisitante">Equipo B</h6>
+                    <div id="opcionesVisitante"></div>
+                </div>
+            </div>
+            <div class="text-center mt-2">
+                <button id="btnGuardarConvocatoria" class="btn btn-success" onclick="GuardarConvocatoria()">
+                    <i class="fa fa-save"></i> Guardar convocatoria
+                </button>
+                <button class="btn btn-secondary" onclick="MostrarConvocatoria(false)">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Área principal con jugadores y acciones -->
-    <div class="row">
+    <div class="row" id="areaPlanilla">
         <!-- Jugadores Equipo Local -->
         <div class="col-md-3">
             <div class="team-header local">
                 <span id="nombreEquipoLocal">Equipo Local</span>
             </div>
             <div class="players-column" id="jugadoresLocal">
-                <!-- Se cargan dinámicamente -->
+                <div class="player-section-title">En cancha</div>
+                <div id="jugadoresLocalCancha"></div>
+                <div class="player-section-title mt-2">Banco <small>(seleccioná para sustituir)</small></div>
+                <div id="jugadoresLocalBanco"></div>
             </div>
         </div>
 
@@ -628,7 +666,10 @@
                 <span id="nombreEquipoVisitante">Equipo Visitante</span>
             </div>
             <div class="players-column" id="jugadoresVisitante">
-                <!-- Se cargan dinámicamente -->
+                <div class="player-section-title">En cancha</div>
+                <div id="jugadoresVisitanteCancha"></div>
+                <div class="player-section-title mt-2">Banco <small>(seleccioná para sustituir)</small></div>
+                <div id="jugadoresVisitanteBanco"></div>
             </div>
         </div>
     </div>
@@ -709,6 +750,8 @@
             local: [],
             visitante: []
         },
+        convocatoria: [],
+        enCancha: { local: [], visitante: [] },
         estadisticas: {
             local: {},
             visitante: {}
@@ -733,30 +776,43 @@
         }
     });
 
+    const escaparHtml = (valor) => String(valor == null ? '' : valor).replace(/[&<>"']/g, caracter => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[caracter]));
+
     const CargarPartido = async (id) => {
         $("#preloaderAPP").show();
         try {
-            // Asegura que la ruta sea relativa al contexto actual
             const res = await $.post(window.location.origin + '/partidos/getByIdAjax', { id });
             if (res.status) {
                 partidoData.id = id;
                 partidoData.equipoLocal = res.data.equipoA;
                 partidoData.equipoVisitante = res.data.equipoB;
+                partidoData.estado = Number(res.data.estado) === 1 ? 'en_curso' : Number(res.data.estado) === 2 ? 'finalizado' : 'detenido';
+                partidoData.scoreLocal = Number(res.data.puntosA) || 0;
+                partidoData.scoreVisitante = Number(res.data.puntosB) || 0;
                 
                 $('#equipoLocal').text(res.data.equipoA || 'Equipo Local');
                 $('#equipoVisitante').text(res.data.equipoB || 'Equipo Visitante');
                 $('#nombreEquipoLocal').text(res.data.equipoA || 'Equipo Local');
                 $('#nombreEquipoVisitante').text(res.data.equipoB || 'Equipo Visitante');
-                
-                await CargarJugadores(res.data.id_equipoA_fk, 'local');
-                await CargarJugadores(res.data.id_equipoB_fk, 'visitante');
-
+                $('#tituloOpcionesLocal').text(res.data.equipoA || 'Equipo A');
+                $('#tituloOpcionesVisitante').text(res.data.equipoB || 'Equipo B');
+                await CargarConvocatoria(id);
                 await cargarEstadisticasPrevias(id);
-                
+                const iniciado = partidoData.estado === 'en_curso'
+                const finalizado = partidoData.estado === 'finalizado'
+                $('#btnComenzarPartido').prop('disabled', iniciado || finalizado)
+                $('#btnFinalizarPartido').prop('disabled', !iniciado)
                 ActualizarInterfaz();
             } else {
                 console.error('Error en respuesta del partido:', res);
-                Swal.fire({
+                $("#preloaderAPP").hide();
+                await Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: 'No se pudo cargar el partido: ' + (res.text || 'Error desconocido'),
@@ -765,7 +821,8 @@
             }
         } catch (error) {
             console.error('Error cargando partido:', error);
-            Swal.fire({
+            $("#preloaderAPP").hide();
+            await Swal.fire({
                 icon: 'error',
                 title: 'Error de conexión',
                 text: 'No se pudo conectar con el servidor',
@@ -778,24 +835,17 @@
 
     const cargarEstadisticasPrevias = async (partidoId) => {
         try {
-            // Asegura que la ruta sea relativa al contexto actual
             const res = await $.post('/partidos/obtenerEstadisticas', { id: partidoId });
             if (res.status && Array.isArray(res.data)) {
-                // Limpiar estadísticas previas
                 partidoData.estadisticas = { local: {}, visitante: {} };
-                // Mapear jugadores a equipo (por nombre)
-                const mapNombreEquipo = {};
-                if (partidoData.equipoLocal) mapNombreEquipo[partidoData.equipoLocal] = 'local';
-                if (partidoData.equipoVisitante) mapNombreEquipo[partidoData.equipoVisitante] = 'visitante';
-
-                // Variables para sumar puntos y faltas por equipo y periodo
                 let puntosEquipo = { local: 0, visitante: 0 };
                 let faltasEquipoPeriodo = { local: {}, visitante: {} };
                 let maxPeriodo = 1;
 
                 res.data.forEach(ev => {
-                    const tipo = mapNombreEquipo[ev.equipo] || null;
-                    if (!tipo) return;
+                    if (ev.evento === 'sustitucion') return;
+                    const tipo = ev.lado === 'A' ? 'local' : ev.lado === 'B' ? 'visitante' : null;
+                    if (!tipo || !partidoData.estadisticas[tipo]) return;
                     if (!partidoData.estadisticas[tipo][ev.id_jugador_fk]) {
                         partidoData.estadisticas[tipo][ev.id_jugador_fk] = {
                             puntos: 0,
@@ -806,7 +856,6 @@
                             falta_antideportiva: 0
                         };
                     }
-                    // Sumar según evento
                     if (ev.evento === 'puntos') {
                         partidoData.estadisticas[tipo][ev.id_jugador_fk].puntos += Number(ev.valor || 0);
                         puntosEquipo[tipo] += Number(ev.valor || 0);
@@ -814,32 +863,22 @@
                         partidoData.estadisticas[tipo][ev.id_jugador_fk].rebotes += Number(ev.valor || 0);
                     } else if (ev.evento === 'asistencias') {
                         partidoData.estadisticas[tipo][ev.id_jugador_fk].asistencias += Number(ev.valor || 0);
-                    } else if (ev.evento === 'faltas') {
+                    } else if (['faltas', 'falta_tecnica', 'falta_antideportiva'].includes(ev.evento)) {
                         partidoData.estadisticas[tipo][ev.id_jugador_fk].faltas += Number(ev.valor || 0);
-                        // Faltas por periodo
+                        if (ev.evento !== 'faltas') {
+                            partidoData.estadisticas[tipo][ev.id_jugador_fk][ev.evento] += Number(ev.valor || 0);
+                        }
                         if (!faltasEquipoPeriodo[tipo][ev.periodo]) faltasEquipoPeriodo[tipo][ev.periodo] = 0;
                         faltasEquipoPeriodo[tipo][ev.periodo] += Number(ev.valor || 0);
-                    } else if (ev.evento === 'falta_tecnica') {
-                        partidoData.estadisticas[tipo][ev.id_jugador_fk].falta_tecnica += Number(ev.valor || 0);
-                    } else if (ev.evento === 'falta_antideportiva') {
-                        partidoData.estadisticas[tipo][ev.id_jugador_fk].falta_antideportiva += Number(ev.valor || 0);
                     }
-                    // Actualizar periodo máximo
                     if (ev.periodo && ev.periodo > maxPeriodo) maxPeriodo = ev.periodo;
                 });
 
-                // Actualizar cabecera: puntos por equipo
                 partidoData.scoreLocal = puntosEquipo.local;
                 partidoData.scoreVisitante = puntosEquipo.visitante;
-
-                // Actualizar periodo
                 partidoData.periodo = maxPeriodo;
-
-                // Faltas de equipo del último periodo
                 partidoData.faltasLocal = faltasEquipoPeriodo.local[maxPeriodo] || 0;
                 partidoData.faltasVisitante = faltasEquipoPeriodo.visitante[maxPeriodo] || 0;
-
-                // Actualizar UI
                 ActualizarInterfaz();
                 RenderizarJugadores('local');
                 RenderizarJugadores('visitante');
@@ -849,56 +888,148 @@
         }
     };
 
-    const CargarJugadores = async (equipoId, tipo) => {
+    const CargarConvocatoria = async (partidoId) => {
         try {
-            // Asegura que la ruta sea relativa al contexto actual
-            const res = await $.post(window.location.origin + '/jugadores/getByEquipoAjax', { equipo_id: equipoId });
-            if (res.status && res.data.length > 0) {
-                partidoData.jugadores[tipo] = res.data;
-                RenderizarJugadores(tipo);
-                InicializarEstadisticas(tipo);
-            } else {
-                console.log(`No se encontraron jugadores para el equipo ${equipoId}`);
-                // Mostrar mensaje si no hay jugadores
-                const container = tipo === 'local' ? '#jugadoresLocal' : '#jugadoresVisitante';
-                $(container).html('<div class="alert alert-warning">No hay jugadores registrados para este equipo</div>');
+            const res = await $.post('/partidos/getConvocatoriaAjax', { id: partidoId });
+            if (!res.status) throw new Error(res.text || 'No se pudo cargar la convocatoria');
+            const data = res.data;
+            partidoData.convocatoria = data.convocados || [];
+            partidoData.enCancha = {
+                local: data.enCancha.A || [],
+                visitante: data.enCancha.B || []
+            };
+            partidoData.jugadores.local = partidoData.convocatoria.filter(jugador => jugador.lado === 'A');
+            partidoData.jugadores.visitante = partidoData.convocatoria.filter(jugador => jugador.lado === 'B');
+            InicializarEstadisticas('local');
+            InicializarEstadisticas('visitante');
+            RenderizarOpcionesConvocatoria(data.candidatos || []);
+            const sinConvocatoria = partidoData.convocatoria.length === 0;
+            $('#btnEditarConvocatoria').toggleClass('d-none', partidoData.estado !== 'detenido' || sinConvocatoria);
+            MostrarConvocatoria(sinConvocatoria);
+            RenderizarJugadores('local');
+            RenderizarJugadores('visitante');
+        } catch (error) {
+            console.error('Error cargando convocatoria:', error);
+            throw error;
+        }
+    };
+
+    const RenderizarOpcionesConvocatoria = (candidatos) => {
+        const convocados = new Map(partidoData.convocatoria.map(jugador => [Number(jugador.id_jugador_fk), jugador]));
+        ['A', 'B'].forEach(lado => {
+            const tipo = lado === 'A' ? 'local' : 'visitante';
+            const contenedor = tipo === 'local' ? '#opcionesLocal' : '#opcionesVisitante';
+            const jugadores = candidatos.filter(jugador => jugador.lado === lado);
+            if (!jugadores.length) {
+                $(contenedor).html('<div class="alert alert-warning">No hay jugadores activos en el plantel de este equipo.</div>');
+                return;
+            }
+            $(contenedor).html(jugadores.map(jugador => {
+                const id = Number(jugador.id_jugador_fk);
+                const seleccionado = convocados.get(id);
+                const titular = seleccionado && Number(seleccionado.es_titular) === 1;
+                return `<div class="d-flex align-items-center justify-content-between border-bottom py-1">
+                    <label class="mb-0">
+                        <input type="checkbox" class="convocado-checkbox" data-lado="${lado}" data-jugador="${id}" ${seleccionado ? 'checked' : ''}>
+                        #${escaparHtml(jugador.dorsal)} ${escaparHtml(jugador.nombre)}
+                    </label>
+                    <label class="mb-0 ml-2">
+                        <input type="radio" name="titular${lado}" value="${id}" onchange="SeleccionarTitular('${lado}', ${id})" ${titular ? 'checked' : ''}>
+                        Titular
+                    </label>
+                </div>`;
+            }).join(''));
+        });
+    };
+
+    const SeleccionarTitular = (lado, jugadorId) => {
+        $(`.convocado-checkbox[data-lado="${lado}"][data-jugador="${jugadorId}"]`).prop('checked', true);
+    };
+
+    const MostrarConvocatoria = (mostrar) => {
+        const hayConvocatoria = partidoData.convocatoria.length > 0;
+        const puedeEditar = partidoData.estado === 'detenido';
+        const mostrarPanel = puedeEditar && (mostrar || !hayConvocatoria);
+        $('#panelConvocatoria').toggleClass('d-none', !mostrarPanel);
+        $('#areaPlanilla').toggleClass('d-none', mostrarPanel || !hayConvocatoria);
+        $('#btnEditarConvocatoria').toggleClass('d-none', !hayConvocatoria || !puedeEditar || mostrarPanel);
+    };
+
+    const GuardarConvocatoria = async () => {
+        const seleccion = [];
+        let titularesValidos = true;
+        ['A', 'B'].forEach(lado => {
+            $('.convocado-checkbox:checked').filter((_, input) => $(input).data('lado') === lado).each((_, input) => {
+                const jugadorId = Number($(input).data('jugador'));
+                seleccion.push({ id_jugador_fk: jugadorId, lado, es_titular: $(`input[name="titular${lado}"][value="${jugadorId}"]`).is(':checked') });
+            });
+            const titularesSeleccionados = seleccion.filter(jugador => jugador.lado === lado && jugador.es_titular).length;
+            if (titularesSeleccionados !== 5) titularesValidos = false;
+        });
+        if (!titularesValidos) {
+            await Swal.fire({ icon: 'warning', title: 'Convocatoria incompleta', text: 'Marcá exactamente cinco titulares por equipo.' });
+            return;
+        }
+        $('#preloaderAPP').show();
+        try {
+            const res = await $.post('/partidos/guardarConvocatoria', {
+                id_partido_fk: partidoData.id,
+                convocados: JSON.stringify(seleccion)
+            });
+            $('#preloaderAPP').hide();
+            await Swal.fire({ icon: res.icon, title: res.title, text: res.text, timer: res.status ? 1500 : undefined });
+            if (res.status) {
+                await CargarConvocatoria(partidoData.id);
+                await cargarEstadisticasPrevias(partidoData.id);
             }
         } catch (error) {
-            console.error('Error cargando jugadores:', error);
+            $('#preloaderAPP').hide();
+            console.error('Error guardando convocatoria:', error);
+            const respuesta = error.responseJSON || {};
+            await Swal.fire({ icon: 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudo guardar la convocatoria.' });
         }
     };
 
     const RenderizarJugadores = (tipo) => {
-        const container = tipo === 'local' ? '#jugadoresLocal' : '#jugadoresVisitante';
-        let html = '';
-        
-        partidoData.jugadores[tipo].forEach(jugador => {
-            const stats = partidoData.estadisticas[tipo][jugador.id] || {};
-            const isSelected = jugadorSeleccionado.id == jugador.id;
-            const totalFaltas = (stats.faltas || 0);
+        const idsEnCancha = new Set(partidoData.enCancha[tipo].map(Number));
+        const jugadores = partidoData.jugadores[tipo];
+        const renderJugador = (jugador, enCancha) => {
+            const jugadorId = Number(jugador.id_jugador_fk);
+            const stats = partidoData.estadisticas[tipo][jugadorId] || {};
+            const isSelected = jugadorSeleccionado.id == jugadorId;
+            const totalFaltas = stats.faltas || 0;
             const hasFouledOut = totalFaltas >= 5;
-            
-            html += `
-                <div class="player-item ${isSelected ? 'selected' : ''} ${hasFouledOut ? 'foul-out' : ''}" onclick="SeleccionarJugador('${tipo}', ${jugador.id}, '${jugador.nombre}', '${jugador.dorsal}')">
-                    <div class="player-number">${jugador.dorsal}</div>
-                    <div class="player-name">${jugador.nombre}</div>
+            const side = enCancha ? `onclick="SeleccionarJugador('${tipo}', ${jugadorId})"` : '';
+            const button = !enCancha && partidoData.estado === 'en_curso'
+                ? `<button class="btn btn-sm btn-warning btn-sustitucion" onclick="event.stopPropagation(); SustituirJugador(${jugadorId})" title="Ingresar a cancha"><i class="fa fa-right-left"></i></button>`
+                : '';
+            return `
+                <div class="player-item ${enCancha ? '' : 'bench-player'} ${isSelected ? 'selected' : ''} ${hasFouledOut ? 'foul-out' : ''}" ${side}>
+                    ${button}
+                    <div class="player-number">${escaparHtml(jugador.dorsal)}</div>
+                    <div class="player-name">${escaparHtml(jugador.nombre)}</div>
                     <div class="player-stats">
                         <span class="stat-puntos">PTS: ${stats.puntos || 0}</span>
                         <span class="stat-rebotes">REB: ${stats.rebotes || 0}</span>
                         <span class="stat-asistencias">AST: ${stats.asistencias || 0}</span>
-                        <span class="stat-faltas">FL: ${stats.faltas || 0}</span>
+                        <span class="stat-faltas">FL: ${totalFaltas}</span>
                     </div>
                 </div>
             `;
-        });
-        
-        $(container).html(html);
+        };
+        const cancha = jugadores.filter(jugador => idsEnCancha.has(Number(jugador.id_jugador_fk)));
+        const banco = jugadores.filter(jugador => !idsEnCancha.has(Number(jugador.id_jugador_fk)));
+        const canchaHtml = cancha.length ? cancha.map(jugador => renderJugador(jugador, true)).join('') : '<small class="text-muted">Sin jugadores en cancha.</small>';
+        const bancoHtml = banco.length ? banco.map(jugador => renderJugador(jugador, false)).join('') : '<small class="text-muted">No hay suplentes convocados.</small>';
+        $(`#jugadores${tipo === 'local' ? 'Local' : 'Visitante'}Cancha`).html(canchaHtml);
+        $(`#jugadores${tipo === 'local' ? 'Local' : 'Visitante'}Banco`).html(bancoHtml);
     };
 
     const InicializarEstadisticas = (tipo) => {
         partidoData.jugadores[tipo].forEach(jugador => {
-            if (!partidoData.estadisticas[tipo][jugador.id]) {
-                partidoData.estadisticas[tipo][jugador.id] = {
+            const jugadorId = Number(jugador.id_jugador_fk);
+            if (!partidoData.estadisticas[tipo][jugadorId]) {
+                partidoData.estadisticas[tipo][jugadorId] = {
                     puntos: 0,
                     rebotes: 0,
                     asistencias: 0,
@@ -918,14 +1049,13 @@
         if (!partidoData.estadisticas[equipo][jugadorId]) {
             InicializarEstadisticas(equipo);
         }
-        
-        // Sumar la estadística
+        const stats = partidoData.estadisticas[equipo][jugadorId];
+        const faltasAntes = stats.faltas || 0;
         if (estadistica === 'falta_tecnica' || estadistica === 'falta_antideportiva') {
-            // Sumar como falta común también
-            partidoData.estadisticas[equipo][jugadorId]['faltas'] += valor;
-            partidoData.estadisticas[equipo][jugadorId][estadistica] = (partidoData.estadisticas[equipo][jugadorId][estadistica] || 0) + valor;
+            stats.faltas += valor;
+            stats[estadistica] = (stats[estadistica] || 0) + valor;
         } else {
-            partidoData.estadisticas[equipo][jugadorId][estadistica] += valor;
+            stats[estadistica] = (stats[estadistica] || 0) + valor;
         }
 
         if (estadistica === 'puntos') {
@@ -935,36 +1065,20 @@
                 partidoData.scoreVisitante += valor;
             }
         }
-        // Sumar faltas de equipo si corresponde
         if (estadistica === 'faltas' || estadistica === 'falta_tecnica' || estadistica === 'falta_antideportiva') {
             if (equipo === 'local') {
                 partidoData.faltasLocal++;
             } else {
                 partidoData.faltasVisitante++;
             }
-            // Validar si el jugador llegó a 5 faltas (comunes + técnicas + antideportivas)
-            const stats = partidoData.estadisticas[equipo][jugadorId];
-            const totalFaltas = (stats.faltas || 0) + (stats.falta_tecnica || 0) + (stats.falta_antideportiva || 0);
-            console.log('Jugador', jugadorId, 'faltas:', stats.faltas, 'tecnica:', stats.falta_tecnica, 'antideportiva:', stats.falta_antideportiva, 'total:', totalFaltas);
-            if (totalFaltas >= 5) {
-                const jugador = partidoData.jugadores[equipo].find(j => j.id == jugadorId);
-                console.log('DEBUG: Antes de mostrar Swal de 5 faltas');
-                window._swalDebug('Antes de mostrar Swal de 5 faltas');
-                if (typeof Swal !== 'undefined' && Swal.fire) {
-                    setTimeout(function() {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: '¡Jugador debe retirarse!',
-                            text: `${jugador ? jugador.nombre : 'El jugador'} ha alcanzado 5 faltas y debe retirarse de la cancha.`,
-                            showConfirmButton: true
-                        });
-                    }, 500);
-                } else {
-                    console.error('SweetAlert2 (Swal) no está definido. Revisa la carga del script.');
-                    alert('ERROR: SweetAlert2 no está definido.');
-                }
-                window._swalDebug('Después de mostrar Swal de 5 faltas');
-                console.log('DEBUG: Después de mostrar Swal de 5 faltas');
+            if (faltasAntes < 5 && stats.faltas >= 5) {
+                const jugador = partidoData.jugadores[equipo].find(j => Number(j.id_jugador_fk) === Number(jugadorId));
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Jugador debe retirarse!',
+                    text: `${jugador ? jugador.nombre : 'El jugador'} alcanzó cinco faltas y debe salir de la cancha. Registrá la sustitución correspondiente.`,
+                    showConfirmButton: true
+                });
             }
         }
 
@@ -1076,7 +1190,9 @@
         ActualizarInterfaz();
     };
 
-    const SeleccionarJugador = (equipo, id, nombre, dorsal) => {
+    const SeleccionarJugador = (equipo, id) => {
+        const jugador = partidoData.jugadores[equipo].find(item => Number(item.id_jugador_fk) === Number(id));
+        if (!jugador || !partidoData.enCancha[equipo].map(Number).includes(Number(id))) return;
         // Si es el mismo jugador, deseleccionar
         if (jugadorSeleccionado.id == id) {
             DesseleccionarJugador();
@@ -1086,8 +1202,8 @@
         jugadorSeleccionado = {
             id: id,
             equipo: equipo,
-            nombre: `${nombre}`,
-            dorsal: dorsal
+            nombre: jugador.nombre,
+            dorsal: jugador.dorsal
         };
         
         // Actualizar interfaz
@@ -1136,18 +1252,6 @@
             return;
         }
 
-        // Guardar última acción para deshacer
-        ultimaAccion = {
-            jugador_id: jugadorSeleccionado.id,
-            equipo: jugadorSeleccionado.equipo,
-            estadistica: estadistica,
-            valor: valor,
-            timestamp: Date.now()
-        };
-
-        AgregarEstadistica(jugadorSeleccionado.equipo, jugadorSeleccionado.id, estadistica, valor);
-
-        // Enviar acción individual al backend
         try {
             const accionData = {
                 id_partido_fk: partidoData.id,
@@ -1157,9 +1261,24 @@
                 tiempo_restante: partidoData.tiempoRestante,
                 valor: valor,
             };
-            await $.post('/partidos/registrarEstadistica', accionData);
+            const res = await $.post('/partidos/registrarEstadistica', accionData);
+            if (!res.status) {
+                await Swal.fire({ icon: res.icon || 'error', title: res.title || 'No se pudo registrar', text: res.text || 'La estadística no fue guardada.' });
+                return;
+            }
+            ultimaAccion = {
+                jugador_id: jugadorSeleccionado.id,
+                equipo: jugadorSeleccionado.equipo,
+                estadistica,
+                valor,
+                timestamp: Date.now()
+            };
+            AgregarEstadistica(jugadorSeleccionado.equipo, jugadorSeleccionado.id, estadistica, valor);
         } catch (error) {
             console.error('Error enviando estadística individual:', error);
+            const respuesta = error.responseJSON || {};
+            await Swal.fire({ icon: respuesta.icon || 'error', title: respuesta.title || 'Error de conexión', text: respuesta.text || 'No se pudo guardar la estadística.' });
+            return;
         }
 
         // Mostrar feedback visual
@@ -1179,6 +1298,53 @@
 
         // Auto-deseleccionar después de registrar (opcional)
         // DesseleccionarJugador();
+    };
+
+    const SustituirJugador = async (entraId) => {
+        const jugadorEntra = partidoData.convocatoria.find(jugador => Number(jugador.id_jugador_fk) === Number(entraId));
+        if (!jugadorEntra || partidoData.estado !== 'en_curso') return;
+        const tipo = jugadorEntra.lado === 'A' ? 'local' : 'visitante';
+        const opciones = partidoData.enCancha[tipo]
+            .map(id => partidoData.jugadores[tipo].find(jugador => Number(jugador.id_jugador_fk) === Number(id)))
+            .filter(Boolean);
+        const inputOptions = {};
+        opciones.forEach(jugador => {
+            inputOptions[jugador.id_jugador_fk] = `#${jugador.dorsal} ${jugador.nombre}`;
+        });
+        if (!opciones.length) return;
+        const seleccion = await Swal.fire({
+            title: 'Registrar sustitución',
+            text: `Ingresa #${jugadorEntra.dorsal} ${jugadorEntra.nombre}. Seleccioná quién sale.`,
+            input: 'select',
+            inputOptions,
+            inputPlaceholder: 'Jugador que sale',
+            showCancelButton: true,
+            confirmButtonText: 'Registrar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: value => value ? undefined : 'Seleccioná el jugador que sale.'
+        });
+        if (!seleccion.isConfirmed) return;
+        $('#preloaderAPP').show();
+        try {
+            const res = await $.post('/partidos/registrarSustitucion', {
+                id_partido_fk: partidoData.id,
+                id_jugador_sale: Number(seleccion.value),
+                id_jugador_entra: Number(entraId),
+                periodo: partidoData.periodo,
+                tiempo_restante: partidoData.tiempoRestante
+            });
+            $('#preloaderAPP').hide();
+            await Swal.fire({ icon: res.icon, title: res.title, text: res.text, timer: res.status ? 1200 : undefined });
+            if (res.status) {
+                DesseleccionarJugador();
+                await CargarConvocatoria(partidoData.id);
+            }
+        } catch (error) {
+            $('#preloaderAPP').hide();
+            console.error('Error registrando sustitución:', error);
+            const respuesta = error.responseJSON || {};
+            await Swal.fire({ icon: 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudo registrar la sustitución.' });
+        }
     };
 
     const QuitarUltimaAccion = async () => {
@@ -1251,15 +1417,20 @@
             return;
         }
         try {
-            // Actualiza estado en backend
-            await $.post('/partidos/actualizarEstado', { id: partidoData.id, estado: 1, puntosA: 0, puntosB: 0 });
-            partidoData.estado = 1;
+            const res = await $.post('/partidos/actualizarEstado', { id: partidoData.id, estado: 1, puntosA: partidoData.scoreLocal, puntosB: partidoData.scoreVisitante });
+            if (!res.status) {
+                await Swal.fire({ icon: res.icon || 'warning', title: res.title || 'No se pudo iniciar', text: res.text || 'No se pudo iniciar el partido.' });
+                return;
+            }
+            partidoData.estado = 'en_curso';
             $("#btnComenzarPartido").prop('disabled', true);
             $("#btnFinalizarPartido").prop('disabled', false);
-            // Habilita acciones (si tienes lógica de deshabilitar, aquí la reviertes)
+            await CargarConvocatoria(partidoData.id);
             Swal.fire({ icon: 'success', title: 'Partido iniciado', timer: 1200, showConfirmButton: false });
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar el estado.' });
+            console.error('Error iniciando partido:', error);
+            const respuesta = error.responseJSON || {};
+            Swal.fire({ icon: respuesta.icon || 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudo actualizar el estado.' });
         }
     };
 
@@ -1270,18 +1441,23 @@
             return;
         }
         try {
-            await $.post('/partidos/actualizarEstado', {
+            const res = await $.post('/partidos/actualizarEstado', {
                 id: partidoData.id,
                 estado: 2,
                 puntosA: partidoData.scoreLocal,
                 puntosB: partidoData.scoreVisitante
             });
-            partidoData.estado = 2;
+            if (!res.status) {
+                await Swal.fire({ icon: res.icon || 'error', title: res.title || 'No se pudo finalizar', text: res.text || 'No se pudo finalizar el partido.' });
+                return;
+            }
+            partidoData.estado = 'finalizado';
             $("#btnFinalizarPartido").prop('disabled', true);
             Swal.fire({ icon: 'success', title: 'Partido finalizado', timer: 1200, showConfirmButton: false });
             setTimeout(() => { window.location.href = '/partidos'; }, 1300);
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo finalizar el partido.' });
+            const respuesta = error.responseJSON || {};
+            Swal.fire({ icon: respuesta.icon || 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudo finalizar el partido.' });
         }
     };
 

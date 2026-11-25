@@ -13,15 +13,15 @@
         <input type="text" class="form-control" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
         <div>
             <label>Ubicación</label>
-            <select class="form-control" id="cmbUbicacionFiltro" onchange="getLista()"></select>
+            <select class="form-control selectpicker" id="cmbUbicacionFiltro" onchange="getLista()"></select>
         </div>
         <div>
             <label>Repuesto</label>
-            <select class="form-control" id="cmbRepuestoFiltro" onchange="getLista()"></select>
+            <select class="form-control selectpicker" id="cmbRepuestoFiltro" onchange="getLista()"></select>
         </div>
         <div>
             <label>Neumát.</label>
-            <select class="form-control" id="cmbNeumaticosFiltro" onchange="getLista()">
+            <select class="form-control selectpicker" id="cmbNeumaticosFiltro" onchange="getLista()">
                 <option value="t" selected>Todos</option>
                 <option value="1">Si</option>
                 <option value="0">No</option>
@@ -29,11 +29,11 @@
         </div>
         <div>
             <label>Condicion Neumat.</label>
-            <select class="form-control" id="cmbCondNeumaFiltro" onchange="getLista()"></select>
+            <select class="form-control selectpicker" id="cmbCondNeumaFiltro" onchange="getLista()"></select>
         </div>
         <div>
             <label>Marca</label>
-            <select class="form-control" id="cmbMarcaFiltro" onchange="getLista()"></select>
+            <select class="form-control selectpicker" id="cmbMarcaFiltro" onchange="getLista()"></select>
         </div>
         {% if permisos.a %}
             <button class="btn btn-round btn-success modalAccion mr-1" data-toggle="tooltip" data-placement="top" title="Nuevo" onclick="ModalAccion('a')">

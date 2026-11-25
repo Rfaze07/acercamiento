@@ -19,9 +19,31 @@ exports.getAllbyActivo = a => {
         SELECT j.*, e.nombre as equipo
         FROM jugadores j
         LEFT JOIN equipos e ON j.id_equipo_fk = e.id
-        WHERE j.activo = 1
+        WHERE j.activo = ?
         ORDER BY j.nombre
     `, [a])
+}
+
+exports.getLista = filtros => {
+    let query = `
+        SELECT j.*, e.nombre AS equipo
+        FROM jugadores j
+        LEFT JOIN equipos e ON j.id_equipo_fk = e.id
+        WHERE 1 = 1
+    `
+    const params = []
+    if (filtros.equipo === 'sin_equipo') {
+        query += ' AND j.id_equipo_fk IS NULL'
+    } else if (filtros.equipo && filtros.equipo !== 't') {
+        query += ' AND j.id_equipo_fk = ?'
+        params.push(filtros.equipo)
+    }
+    if (filtros.activo != null && filtros.activo !== '' && filtros.activo !== 't') {
+        query += ' AND j.activo = ?'
+        params.push(filtros.activo)
+    }
+    query += ' ORDER BY j.nombre'
+    return queryMYSQL(query, params)
 }
 
 exports.getById = id => {
@@ -59,7 +81,7 @@ exports.update = o => {
 
 exports.delete = async id => {
     return queryMYSQL(`
-        DELETE FROM jugadores 
+        UPDATE jugadores SET activo = 0
         WHERE id = ?
     `, [id])
 }

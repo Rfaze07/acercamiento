@@ -334,7 +334,7 @@ const configurarEventosUsabilidad = () => {
                 </div>
                 <div class="form-group">
                     <label for="iva">IVA %:</label>
-                    <select id="iva" class="form-control" onchange="calcularPrecioSwal()">
+                    <select id="iva" class="form-control selectpicker" onchange="calcularPrecioSwal()">
                         <option value="1" ${alicuotaIva == 1 ? 'selected' : ''}>0%</option>
                         <option value="2" ${alicuotaIva == 2 ? 'selected' : ''}>10.5%</option>
                         <option value="3" ${alicuotaIva == 3 ? 'selected' : ''}>21%</option>
@@ -503,7 +503,7 @@ const configurarEventosUsabilidad = () => {
                 </div>
                 <div class="form-group">
                     <label for="iva">IVA %:</label>
-                    <select id="iva" class="form-control" onchange="calcularPrecioSwal()">
+                    <select id="iva" class="form-control selectpicker" onchange="calcularPrecioSwal()">
                         <option value="1" ${producto.id_alicuota_iva_fk == 1? 'selected' : ''}>0%</option>
                         <option value="2" ${producto.id_alicuota_iva_fk == 2 ? 'selected' : ''}>10.5%</option>
                         <option value="3" ${producto.id_alicuota_iva_fk == 3 ? 'selected' : ''}>21%</option>

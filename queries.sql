@@ -1813,3 +1813,471 @@ CREATE TABLE noticias (
     descripcion TEXT NOT NULL,
     path_foto varchar(300) DEFAULT NULL
 );
+
+
+
+USE basquetlaemiliaLocal
+
+/*
+    MIGRACION DEL MODULO DE TORNEOS - BASQUET LA EMILIA
+    Compatible con MySQL 8.0+
+
+    IMPORTANTE:
+    1. Hacer un backup completo antes de ejecutar.
+    2. Ejecutar sobre la base existente `acercamiento`.
+    3. Este script es una migracion inicial: no esta pensado para ejecutarse
+       por segunda vez sobre una base ya migrada.
+    4. No elimina datos ni tablas existentes.
+*/
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 1;
+
+/* =========================================================
+   1. CLUBES
+   Un club puede tener muchos equipos.
+   Un equipo puede no pertenecer a ningun club.
+   ========================================================= */
+
+CREATE TABLE `clubes` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `nombre` VARCHAR(100) NOT NULL,
+    `localidad` VARCHAR(100) DEFAULT NULL,
+    `escudo` VARCHAR(200) DEFAULT NULL,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    `fecha_alta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_clubes_nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   2. TIPOS DE COMPETENCIA
+   El tipo de competencia no define el formato deportivo.
+   Ejemplos: Interno, Federado, Amistoso.
+   ========================================================= */
+
+CREATE TABLE `tipos_competencia` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `nombre` VARCHAR(50) NOT NULL,
+    `descripcion` VARCHAR(200) DEFAULT NULL,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_tipos_competencia_nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT IGNORE INTO `tipos_competencia` (`nombre`, `descripcion`) VALUES
+('Interno', 'Competencias organizadas internamente por el club'),
+('Federado', 'Competencias oficiales federativas'),
+('Amistoso', 'Encuentros y competencias amistosas');
+
+
+/* =========================================================
+   3. TORNEOS
+   Un torneo pertenece a un tipo de competencia.
+   El formato se define en cada categoria/fase, no aqui.
+   ========================================================= */
+
+CREATE TABLE `torneos` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_tipo_competencia_fk` INT NOT NULL,
+    `nombre` VARCHAR(120) NOT NULL,
+    `temporada` VARCHAR(20) DEFAULT NULL,
+    `descripcion` TEXT DEFAULT NULL,
+    `fecha_inicio` DATE DEFAULT NULL,
+    `fecha_fin` DATE DEFAULT NULL,
+    `estado` ENUM('planificacion','inscripcion','en_curso','finalizado','cancelado')
+        NOT NULL DEFAULT 'planificacion',
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    `fecha_alta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `fecha_modificacion` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_torneos_tipo` (`id_tipo_competencia_fk`),
+    KEY `idx_torneos_temporada` (`temporada`),
+    KEY `idx_torneos_estado` (`estado`),
+    CONSTRAINT `fk_torneos_tipo_competencia`
+        FOREIGN KEY (`id_tipo_competencia_fk`)
+        REFERENCES `tipos_competencia` (`id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   4. CATEGORIAS DEL TORNEO
+   Las categorias son propias de cada torneo.
+   Ejemplos: U13, U15, U17, Primera, Libre, Femenino.
+   ========================================================= */
+
+CREATE TABLE `torneos_categorias` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_torneo_fk` INT NOT NULL,
+    `nombre` VARCHAR(60) NOT NULL,
+    `rama` ENUM('masculina','femenina','mixta','no_aplica')
+        NOT NULL DEFAULT 'no_aplica',
+    `edad_desde` TINYINT UNSIGNED DEFAULT NULL,
+    `edad_hasta` TINYINT UNSIGNED DEFAULT NULL,
+    `formato` ENUM('liga','grupos','eliminacion','amistoso','personalizado')
+        NOT NULL DEFAULT 'liga',
+    `orden` INT NOT NULL DEFAULT 0,
+    `observaciones` VARCHAR(500) DEFAULT NULL,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_torneo_categoria_nombre` (`id_torneo_fk`, `nombre`, `rama`),
+    KEY `idx_torneos_categorias_torneo` (`id_torneo_fk`),
+    CONSTRAINT `fk_torneos_categorias_torneo`
+        FOREIGN KEY (`id_torneo_fk`)
+        REFERENCES `torneos` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   5. FASES
+   Una categoria puede tener varias fases:
+   fase regular, segunda fase, semifinales, finales, etc.
+   ========================================================= */
+
+CREATE TABLE `fases` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_torneo_categoria_fk` INT NOT NULL,
+    `nombre` VARCHAR(100) NOT NULL,
+    `tipo` ENUM('regular','grupos','eliminacion','playoff','final','amistoso','personalizada')
+        NOT NULL DEFAULT 'regular',
+    `formato` ENUM('liga','grupos','eliminacion','amistoso','personalizado')
+        NOT NULL DEFAULT 'liga',
+    `orden` INT NOT NULL DEFAULT 1,
+    `cantidad_ruedas` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    KEY `idx_fases_categoria` (`id_torneo_categoria_fk`),
+    CONSTRAINT `fk_fases_torneo_categoria`
+        FOREIGN KEY (`id_torneo_categoria_fk`)
+        REFERENCES `torneos_categorias` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   6. GRUPOS
+   Los grupos pertenecen a una fase, no directamente al torneo.
+   Esto permite tener grupos distintos en diferentes fases.
+   ========================================================= */
+
+CREATE TABLE `grupos` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_fase_fk` INT NOT NULL,
+    `nombre` VARCHAR(60) NOT NULL,
+    `orden` INT NOT NULL DEFAULT 0,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_grupo_fase_nombre` (`id_fase_fk`, `nombre`),
+    KEY `idx_grupos_fase` (`id_fase_fk`),
+    CONSTRAINT `fk_grupos_fase`
+        FOREIGN KEY (`id_fase_fk`)
+        REFERENCES `fases` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   7. AMPLIAR EQUIPOS
+   id_club_fk es nullable:
+   - NULL: equipo independiente.
+   - Con valor: equipo perteneciente a un club.
+   No se asignan clubes automaticamente a los equipos existentes.
+   ========================================================= */
+
+ALTER TABLE `equipos`
+    ADD COLUMN `id_club_fk` INT DEFAULT NULL AFTER `nombre`,
+    ADD KEY `idx_equipos_club` (`id_club_fk`),
+    ADD CONSTRAINT `fk_equipos_club`
+        FOREIGN KEY (`id_club_fk`)
+        REFERENCES `clubes` (`id`)
+        ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+/* =========================================================
+   8. EQUIPOS INSCRIPTOS EN CATEGORIAS DE TORNEOS
+   El mismo equipo puede participar en distintos torneos/categorias.
+   ========================================================= */
+
+CREATE TABLE `torneos_equipos` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_torneo_categoria_fk` INT NOT NULL,
+    `id_equipo_fk` INT NOT NULL,
+    `nombre_inscripcion` VARCHAR(80) DEFAULT NULL,
+    `fecha_inscripcion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `estado` ENUM('pendiente','confirmado','rechazado','retirado')
+        NOT NULL DEFAULT 'confirmado',
+    `observaciones` VARCHAR(500) DEFAULT NULL,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_torneo_categoria_equipo` (`id_torneo_categoria_fk`, `id_equipo_fk`),
+    KEY `idx_torneos_equipos_equipo` (`id_equipo_fk`),
+    CONSTRAINT `fk_torneos_equipos_categoria`
+        FOREIGN KEY (`id_torneo_categoria_fk`)
+        REFERENCES `torneos_categorias` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_torneos_equipos_equipo`
+        FOREIGN KEY (`id_equipo_fk`)
+        REFERENCES `equipos` (`id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   9. EQUIPOS ASIGNADOS A GRUPOS
+   Se relaciona con torneos_equipos para permitir que un equipo
+   participe en distintos grupos en fases diferentes.
+   ========================================================= */
+
+CREATE TABLE `grupos_equipos` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_grupo_fk` INT NOT NULL,
+    `id_torneo_equipo_fk` INT NOT NULL,
+    `orden` INT NOT NULL DEFAULT 0,
+    `activo` TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_grupo_equipo` (`id_grupo_fk`, `id_torneo_equipo_fk`),
+    KEY `idx_grupos_equipos_equipo` (`id_torneo_equipo_fk`),
+    CONSTRAINT `fk_grupos_equipos_grupo`
+        FOREIGN KEY (`id_grupo_fk`)
+        REFERENCES `grupos` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_grupos_equipos_torneo_equipo`
+        FOREIGN KEY (`id_torneo_equipo_fk`)
+        REFERENCES `torneos_equipos` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   10. PLANTELES POR TORNEO
+   Los jugadores son personas y no quedan atados para siempre
+   a un equipo. El dorsal pertenece a esta inscripcion.
+   ========================================================= */
+
+ALTER TABLE `jugadores`
+    MODIFY COLUMN `id_equipo_fk` INT DEFAULT NULL
+    COMMENT 'LEGACY: equipo historico. Usar torneos_equipos_jugadores para nuevas inscripciones';
+
+CREATE TABLE `torneos_equipos_jugadores` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_torneo_equipo_fk` INT NOT NULL,
+    `id_jugador_fk` INT NOT NULL,
+    `dorsal` INT DEFAULT NULL,
+    `fecha_alta` DATE DEFAULT NULL,
+    `fecha_baja` DATE DEFAULT NULL,
+    `estado` ENUM('activo','baja','suspendido') NOT NULL DEFAULT 'activo',
+    `observaciones` VARCHAR(500) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_torneo_equipo_jugador` (`id_torneo_equipo_fk`, `id_jugador_fk`),
+    KEY `idx_tej_jugador` (`id_jugador_fk`),
+    CONSTRAINT `fk_tej_torneo_equipo`
+        FOREIGN KEY (`id_torneo_equipo_fk`)
+        REFERENCES `torneos_equipos` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_tej_jugador`
+        FOREIGN KEY (`id_jugador_fk`)
+        REFERENCES `jugadores` (`id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   11. AMPLIAR PARTIDOS
+   Se conservan las columnas actuales:
+   fecha_hora, id_equipoA_fk, id_equipoB_fk, estado,
+   puntosA y puntosB.
+
+   id_torneo_categoria_fk NULL significa partido independiente
+   o partido historico todavia no asociado a un torneo.
+   ========================================================= */
+
+ALTER TABLE `partidos`
+    ADD COLUMN `id_torneo_categoria_fk` INT DEFAULT NULL AFTER `id_equipoB_fk`,
+    ADD COLUMN `id_fase_fk` INT DEFAULT NULL AFTER `id_torneo_categoria_fk`,
+    ADD COLUMN `id_grupo_fk` INT DEFAULT NULL AFTER `id_fase_fk`,
+    ADD COLUMN `jornada` INT DEFAULT NULL AFTER `id_grupo_fk`,
+    ADD COLUMN `numero_partido` INT DEFAULT NULL AFTER `jornada`,
+    ADD COLUMN `cancha` VARCHAR(100) DEFAULT NULL AFTER `numero_partido`,
+    ADD COLUMN `observaciones` VARCHAR(500) DEFAULT NULL AFTER `cancha`,
+    ADD KEY `idx_partidos_categoria` (`id_torneo_categoria_fk`),
+    ADD KEY `idx_partidos_fase` (`id_fase_fk`),
+    ADD KEY `idx_partidos_grupo` (`id_grupo_fk`),
+    ADD KEY `idx_partidos_fecha` (`fecha_hora`),
+    ADD CONSTRAINT `fk_partidos_torneo_categoria`
+        FOREIGN KEY (`id_torneo_categoria_fk`)
+        REFERENCES `torneos_categorias` (`id`)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    ADD CONSTRAINT `fk_partidos_fase`
+        FOREIGN KEY (`id_fase_fk`)
+        REFERENCES `fases` (`id`)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    ADD CONSTRAINT `fk_partidos_grupo`
+        FOREIGN KEY (`id_grupo_fk`)
+        REFERENCES `grupos` (`id`)
+        ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+/* =========================================================
+   12. JUGADORES CONVOCADOS A CADA PARTIDO
+   Permite guardar titulares, suplentes y participacion.
+   Se conserva la pertenencia al equipo para ese partido.
+   id_torneo_equipo_jugador_fk puede quedar NULL en partidos
+   independientes o historicos.
+   ========================================================= */
+
+CREATE TABLE `partidos_jugadores` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `id_partido_fk` INT NOT NULL,
+    `id_jugador_fk` INT NOT NULL,
+    `id_equipo_fk` INT NOT NULL,
+    `id_torneo_equipo_jugador_fk` INT DEFAULT NULL,
+    `lado` ENUM('A','B') NOT NULL,
+    `dorsal` INT DEFAULT NULL,
+    `es_titular` TINYINT(1) NOT NULL DEFAULT 0,
+    `ingreso` TINYINT(1) NOT NULL DEFAULT 0,
+    `observaciones` VARCHAR(300) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_partido_jugador` (`id_partido_fk`, `id_jugador_fk`),
+    KEY `idx_partidos_jugadores_jugador` (`id_jugador_fk`),
+    KEY `idx_partidos_jugadores_equipo` (`id_equipo_fk`),
+    KEY `idx_partidos_jugadores_plantel` (`id_torneo_equipo_jugador_fk`),
+    CONSTRAINT `fk_partidos_jugadores_partido`
+        FOREIGN KEY (`id_partido_fk`)
+        REFERENCES `partidos` (`id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_partidos_jugadores_jugador`
+        FOREIGN KEY (`id_jugador_fk`)
+        REFERENCES `jugadores` (`id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_partidos_jugadores_equipo`
+        FOREIGN KEY (`id_equipo_fk`)
+        REFERENCES `equipos` (`id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_partidos_jugadores_plantel`
+        FOREIGN KEY (`id_torneo_equipo_jugador_fk`)
+        REFERENCES `torneos_equipos_jugadores` (`id`)
+        ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+/* =========================================================
+   13. INDICES PARA ESTADISTICAS EXISTENTES
+   No se modifica la estructura ni los registros de eventos_partido.
+   ========================================================= */
+
+ALTER TABLE `eventos_partido`
+    ADD KEY `idx_eventos_partido_partido` (`id_partido_fk`),
+    ADD KEY `idx_eventos_partido_jugador` (`id_jugador_fk`),
+    ADD KEY `idx_eventos_partido_evento` (`evento`);
+
+
+/* =========================================================
+   14. CONSULTAS DE CONTROL
+   Ejecutar al finalizar para verificar la migracion.
+   ========================================================= */
+
+SELECT 'Clubes' AS tabla, COUNT(*) AS registros FROM `clubes`
+UNION ALL
+SELECT 'Tipos de competencia', COUNT(*) FROM `tipos_competencia`
+UNION ALL
+SELECT 'Torneos', COUNT(*) FROM `torneos`
+UNION ALL
+SELECT 'Equipos', COUNT(*) FROM `equipos`
+UNION ALL
+SELECT 'Jugadores', COUNT(*) FROM `jugadores`
+UNION ALL
+SELECT 'Partidos', COUNT(*) FROM `partidos`
+UNION ALL
+SELECT 'Eventos de partido', COUNT(*) FROM `eventos_partido`;
+
+
+/*
+    NOTAS DE MIGRACION Y USO:
+
+    - No se crean torneos ficticios para clasificar los partidos historicos.
+      Los partidos actuales quedan con id_torneo_categoria_fk = NULL.
+    - No se asignan clubes automaticamente a los equipos existentes.
+      La asociacion se realiza desde la administracion.
+    - jugadores.id_equipo_fk queda como columna LEGACY para no romper
+      pantallas o consultas antiguas durante la transicion.
+    - Las nuevas inscripciones de jugadores deben realizarse mediante
+      torneos_equipos_jugadores.
+    - eventos_partido conserva sus IDs y columnas actuales. Sus registros
+      siguen apuntando a los mismos partidos y jugadores.
+    - La tabla de posiciones debe calcularse a partir de partidos finalizados;
+      no se almacena como dato fijo para evitar inconsistencias.
+    - La aplicacion debe validar que los equipos de un partido esten
+      inscriptos en la categoria y que la fase/grupo correspondan a esa
+      misma categoria. Las FK individuales no pueden validar por si solas
+      esa coherencia entre varias relaciones.
+*/
+
+/* Pantallas y menu para administrar los modulos de basquet.
+   Las inserciones evitan duplicar rutas o accesos si se ejecutan otra vez. */
+INSERT INTO pantallas (titulo, ayuda, activa, ruta, nivel)
+SELECT 'Clubes', 'Administracion de clubes', 1, '/clubes', 'Lista'
+WHERE NOT EXISTS (SELECT 1 FROM pantallas WHERE ruta = '/clubes');
+
+INSERT INTO pantallas (titulo, ayuda, activa, ruta, nivel)
+SELECT 'Equipos', 'Administracion de equipos y clubes', 1, '/equipos', 'Lista'
+WHERE NOT EXISTS (SELECT 1 FROM pantallas WHERE ruta = '/equipos');
+
+INSERT INTO pantallas (titulo, ayuda, activa, ruta, nivel)
+SELECT 'Jugadores', 'Administracion de jugadores', 1, '/jugadores', 'Lista'
+WHERE NOT EXISTS (SELECT 1 FROM pantallas WHERE ruta = '/jugadores');
+
+INSERT INTO pantallas (titulo, ayuda, activa, ruta, nivel)
+SELECT 'Tipos de competencia', 'Administracion de tipos de competencia', 1, '/tiposCompetencia', 'Lista'
+WHERE NOT EXISTS (SELECT 1 FROM pantallas WHERE ruta = '/tiposCompetencia');
+
+INSERT INTO pantallas (titulo, ayuda, activa, ruta, nivel)
+SELECT 'Torneos', 'Administracion de torneos', 1, '/torneos', 'Lista'
+WHERE NOT EXISTS (SELECT 1 FROM pantallas WHERE ruta = '/torneos');
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Basquet', NULL, 'fa fa-basketball-ball', NULL, 6
+WHERE NOT EXISTS (
+    SELECT 1 FROM menuitems
+    WHERE titulo = 'Basquet' AND parent IS NULL AND id_pantalla IS NULL
+);
+
+SET @menu_basquet_id = (
+    SELECT id FROM menuitems
+    WHERE titulo = 'Basquet' AND parent IS NULL AND id_pantalla IS NULL
+    ORDER BY id
+    LIMIT 1
+);
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Clubes', @menu_basquet_id, 'fa fa-shield', p.id, 1
+FROM pantallas p
+WHERE p.ruta = '/clubes'
+  AND NOT EXISTS (SELECT 1 FROM menuitems WHERE id_pantalla = p.id);
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Equipos', @menu_basquet_id, 'fa fa-users', p.id, 2
+FROM pantallas p
+WHERE p.ruta = '/equipos'
+  AND NOT EXISTS (SELECT 1 FROM menuitems WHERE id_pantalla = p.id);
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Jugadores', @menu_basquet_id, 'fa fa-user', p.id, 3
+FROM pantallas p
+WHERE p.ruta = '/jugadores'
+  AND NOT EXISTS (SELECT 1 FROM menuitems WHERE id_pantalla = p.id);
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Tipos de competencia', @menu_basquet_id, 'fa fa-list', p.id, 4
+FROM pantallas p
+WHERE p.ruta = '/tiposCompetencia'
+  AND NOT EXISTS (SELECT 1 FROM menuitems WHERE id_pantalla = p.id);
+
+INSERT INTO menuitems (titulo, parent, icono, id_pantalla, orden)
+SELECT 'Torneos', @menu_basquet_id, 'fa fa-trophy', p.id, 5
+FROM pantallas p
+WHERE p.ruta = '/torneos'
+  AND NOT EXISTS (SELECT 1 FROM menuitems WHERE id_pantalla = p.id);

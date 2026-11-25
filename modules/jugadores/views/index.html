@@ -1,46 +1,40 @@
 {% extends '../../template.html' %}
 
-{% block styles %}
-<style>
-    .textAreaSize {
-        resize: vertical;
-        min-height: 48px;
-        max-height: 100px;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-    <h2>{{ pagename }}</h2>
-    <div class="d-flex align-items-end mb-3" style="gap: 0.2rem;">
-        <input type="text" class="form-control form-control-sm" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
+<div class="page-toolbar">
+    <h2 class="page-title">{{ pagename }}</h2>
+    <div class="page-filters">
+        <input type="text" class="form-control form-control-sm" id="txtFiltro" placeholder="Buscar">
         <div>
-            <label>Equipos</label>
-            <select class="form-control form-control-sm selectpicker" id="cmbEquipoFiltro" onchange="getLista()"></select>
+            <label for="cmbEquipoFiltro">Equipo histórico</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbEquipoFiltro" onchange="getLista()">
+                <option value="t">Todos</option>
+                <option value="sin_equipo">Sin equipo</option>
+            </select>
         </div>
         <div>
-            <label>Activos</label>
-            <select class="form-control form-control-sm" id="cmbActivoFiltro" onchange="getLista()">
-                <option value="t" selected>Todos</option>
-                <option value="1">Si</option>
+            <label for="cmbActivoFiltro">Activos</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbActivoFiltro" onchange="getLista()">
+                <option value="t">Todos</option>
+                <option value="1" selected>Sí</option>
                 <option value="0">No</option>
             </select>
         </div>
         {% if permisos.a == 1 %}
-        <button class="btn btn-sm btn-round btn-success modalAccion mr-1" data-accion="a" onclick='ModalAccion("a")'>
+        <button type="button" id="btnNuevo" class="btn btn-sm btn-round btn-success" title="Nuevo jugador">
             <i class="fa fa-plus"></i>
         </button>
         {% endif %}
     </div>
 </div>
-<div class="table-responsive" style="height: calc(100vh - 200px)" id="tablaDatos">
+<div class="table-responsive page-table" id="tablaDatos">
     <table class="table table-sm table-fix table-hover tableFixHead">
         <thead>
             <tr>
                 <th scope="col">Acciones</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Equipo</th>
+                <th scope="col">Jugador</th>
+                <th scope="col">Equipo histórico</th>
+                <th scope="col">Dorsal histórico</th>
                 <th scope="col">Activo</th>
             </tr>
         </thead>
@@ -48,41 +42,34 @@
     </table>
 </div>
 
-<!-- MODAL -->
-<div class="modal fade modal-m" data-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-    aria-labelledby="staticBackdropLabel" aria-hidden="true" id="modal">
+<div class="modal fade modal-m" data-backdrop="static" tabindex="-1" aria-hidden="true" id="modal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLabel"></h5>
-                <button type="button" class="close" aria-label="Close" onclick="CerrarModal()">
-                    <span aria-hidden=" true">&times;</span>
-                </button>
+                <button type="button" class="close" aria-label="Close" onclick="CerrarModal()"><span>&times;</span></button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="form-group col-sm-12 col-md-8">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control form-control-sm" id="nombre" maxlength="40">
-                    </div>
-                    <div class="form-grouo col-sm-12 col-md-4">
-                        <label for="dorsal">Dorsal</label>
-                        <input type="number" class="form-control form-control-sm" id="dorsal" min="0" max="99">
-                    </div>
+                <div class="form-group">
+                    <label for="nombre">Nombre del jugador</label>
+                    <input type="text" class="form-control form-control-sm" id="nombre" maxlength="40">
                 </div>
-                <div class="row">
-                    <div class="form-group col-sm-12">
-                        <label for="cmbEquipo">Equipo</label>
-                        <select class="form-control form-control-sm" id="cmbEquipo">
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="cmbEquipo">Equipo histórico (opcional)</label>
+                    <select class="form-control form-control-sm selectpicker" id="cmbEquipo">
+                        <option value="">Sin equipo asignado</option>
+                    </select>
+                    <small class="form-text text-muted">Las nuevas inscripciones se gestionan por torneo; este vínculo se conserva para registros anteriores.</small>
                 </div>
-                <div class="row d-none" id="actionSeccion">
-                    <div class="form-group col-sm-12 text-center">
-                        <div class="custom-control custom-switch ml-1">
-                            <input type="checkbox" class="custom-control-input" id="chbActivo" />
-                            <label class="custom-control-label" for="chbActivo">Activo</label>
-                        </div>
+                <div class="form-group">
+                    <label for="dorsal">Dorsal histórico</label>
+                    <input type="number" class="form-control form-control-sm" id="dorsal" min="0" max="99" step="1" value="0">
+                    <small class="form-text text-muted">El dorsal de las nuevas inscripciones pertenece al plantel del torneo.</small>
+                </div>
+                <div class="form-group d-none text-center" id="actionSeccion">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="chbActivo">
+                        <label class="custom-control-label" for="chbActivo">Activo</label>
                     </div>
                 </div>
             </div>
@@ -93,168 +80,153 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-    $(document).ready(async () => {
-        await ObtenerCmbEquipos('cmbEquipoFiltro', true)
-        getLista()
-    })
+    const escapar = valor => $('<div>').text(valor == null ? '' : valor).html()
 
-    $("#txtFiltro").keyup(async function () {
-        Filtrar()
-    })
-    
     const getLista = async () => {
-        $("#preloaderAPP").show()
-        const res = await $.post('/jugadores/getListaAjax', { equipo: $('#cmbEquipoFiltro').val(), activo: $('#cmbActivoFiltro').val()})
-        let html = ""
-        if(res.status){
-            for (let i = 0; i < res.data.length; i++) {
-                html += `
-                    <tr>
-                        <td>
-                            <div style="display: flex; gap: 2px;">
-                                {% if permisos.m == 1 %}
-                                    <button class="btn btn-round btn-sm btn-warning" data-accion="m"
-                                        data-toggle="tooltip" data-placement="top" title="Modificar" onclick="ModalAccion('m',${res.data[i].id})">
-                                        <i class="fa fa-pen"></i>
-                                    </button>
-                                {% endif %}
-
-                                {% if permisos.b == 1 %}
-                                    <button class="btn btn-round btn-sm btn-danger" onclick="Eliminar(${res.data[i].id})"
-                                        data-toggle="tooltip" data-placement="top" title="Eliminar">
-                                        <i class="fa fa-trash-alt"></i>
-                                    </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class='search'>${res.data[i].nombre}</td>
-                        <td>${res.data[i].equipo}</td>
-                        <td>${res.data[i].activo === 1 ? 'Si' : 'No'}</td>
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post('/jugadores/getListaAjax', {
+                equipo: $('#cmbEquipoFiltro').val(),
+                activo: $('#cmbActivoFiltro').val()
+            })
+            let html = ''
+            if (res.status && res.data.length) {
+                for (const jugador of res.data) {
+                    html += `<tr>
+                        <td><div style="display:flex;gap:2px;">
+                            {% if permisos.m == 1 %}
+                            <button class="btn btn-round btn-sm btn-warning" title="Modificar" onclick="ModalAccion('m',${Number(jugador.id)})"><i class="fa fa-pen"></i></button>
+                            {% endif %}
+                            {% if permisos.b == 1 %}
+                            <button class="btn btn-round btn-sm btn-danger" title="Dar de baja" onclick="Eliminar(${Number(jugador.id)})"><i class="fa fa-trash-alt"></i></button>
+                            {% endif %}
+                        </div></td>
+                        <td class="search">${escapar(jugador.nombre)}</td>
+                        <td>${escapar(jugador.equipo || '—')}</td>
+                        <td>${jugador.dorsal == null ? '—' : Number(jugador.dorsal)}</td>
+                        <td>${jugador.activo === 1 ? 'Sí' : 'No'}</td>
                     </tr>`
+                }
+            } else {
+                html = `<tr><td colspan="5">${escapar(res.text || 'No existen registros cargados')}</td></tr>`
             }
-        }else{
-            html = `<tr><td class="font-weight-bold" colspan="4">${res.text}</td></tr>`
+            $('#tablaDatos tbody').html(html)
+        } catch (error) {
+            console.error(error)
+            $('#tablaDatos tbody').html('<tr><td colspan="5">No se pudo cargar la lista de jugadores.</td></tr>')
+        } finally {
+            $('#preloaderAPP').hide()
         }
-        $('#tablaDatos tbody').html(html)
-        $("#preloaderAPP").hide()
-        $('[data-toggle="tooltip"]').tooltip()
     }
 
     const ModalAccion = async (accion, id) => {
-        await ObtenerCmbEquipos('cmbEquipo', false)
-        $("#preloaderAPP").show()
+        $('#nombre').val('')
+        $('#dorsal').val(0)
+        $('#cmbEquipo').val('')
+        $('#chbActivo').prop('checked', true)
+        $('#actionSeccion').toggleClass('d-none', accion === 'a')
         if (accion === 'a') {
             $('#modalLabel').text('Nuevo jugador')
-            $('#btnAccion').attr('onclick', `PostRegistro("a")`)
-            $('#btnAccion').text('Guardar')
-        }
-        if (accion == 'm') {
-            let res = await $.post(`/jugadores/getByIdAjax`, {id})
-            if (res.status != 0) {
+            $('#btnAccion').off('click').on('click', () => PostRegistro('a'))
+        } else {
+            $('#preloaderAPP').show()
+            try {
+                const res = await $.post('/jugadores/getByIdAjax', { id })
+                if (!res.status) throw new Error(res.text)
                 $('#nombre').val(res.data.nombre)
-                $('#dorsal').val(res.data.dorsal)
-                $('#cmbEquipo').val(res.data.id_equipo_fk)
-                $('#chbActivo').prop('checked', res.data.activo === 1 ? true : false)
+                $('#dorsal').val(res.data.dorsal == null ? 0 : res.data.dorsal)
+                $('#cmbEquipo').val(res.data.id_equipo_fk || '')
+                $('#chbActivo').prop('checked', res.data.activo === 1)
+                $('#modalLabel').text('Modificar jugador')
+                $('#btnAccion').off('click').on('click', () => PostRegistro('m', id))
+            } catch (error) {
+                await MostrarSwalSinPreloader('Error', error.message || 'No se pudo cargar el jugador', 'error')
+                return
+            } finally {
+                $('#preloaderAPP').hide()
             }
-            $('#modalLabel').text('Modificar jugador')
-            $('#btnAccion').text('Guardar')
-            $('#btnAccion').attr('onclick', `PostRegistro("m",${id})`)
-            $('#actionSeccion').removeClass('d-none')
-            $('#actionSeccionDivider').removeClass('d-none')
         }
-        $("#preloaderAPP").hide()
         $('#modal').modal('show')
     }
 
-    const PostRegistro = async (accion, Id) => {
-        $("#preloaderAPP").show()
-        let url = '/jugadores/alta',
-            body = {
+    const PostRegistro = async (accion, id) => {
+        $('#preloaderAPP').show()
+        try {
+            const body = {
                 nombre: $('#nombre').val(),
                 id_equipo_fk: $('#cmbEquipo').val(),
                 dorsal: $('#dorsal').val()
             }
-
-        if (accion === 'm') {
-            url = '/jugadores/modificar'
-            body.activo = $('#chbActivo').prop('checked') ? 1 : 0
-            body.id = Id
-        }
-
-        const res = await $.post(url, body)
-        $("#preloaderAPP").hide()
-        Swal.fire({
-            icon: res.icon,
-            title: res.title, 
-            text: res.text, 
-            timer: 2000
-        }).then(() => {
-            if(res.status){
-                CerrarModal()
-                getLista()
+            const url = accion === 'a' ? '/jugadores/alta' : '/jugadores/modificar'
+            if (accion === 'm') {
+                body.activo = $('#chbActivo').prop('checked') ? 1 : 0
+                body.id = id
             }
-        })        
+            const res = await $.post(url, body)
+            await MostrarSwalSinPreloader(res.title, res.text, res.icon)
+            if (res.status) {
+                CerrarModal()
+                await getLista()
+            }
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', 'No se pudo guardar el jugador.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
     }
 
-    const Eliminar = (id) => {
-        Swal.fire({
-            title: 'Confirmar',
-            text: "¿Desea borrar este registro?",
+    const Eliminar = async id => {
+        const confirmacion = await Swal.fire({
+            title: 'Dar de baja',
+            text: 'El jugador se conservará para mantener sus estadísticas históricas. ¿Desea continuar?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar.',
-            cancelButtonColor: '#d33',
-            cancelButtonText: 'No, cancelar.'
-        }).then(async result => {
-            if (result.isConfirmed) {
-                $("#preloaderAPP").show();
-                let res = await $.post('/jugadores/eliminar', { id })
-                $("#preloaderAPP").hide();
-                Swal.fire({
-                    type: res.type,
-                    icon: res.icon,
-                    title: res.title,
-                    text: res.text,
-                    timer: 2000
-                }).then(() => {
-                    if(res.status){
-                        CerrarModal()
-                        getLista()
-                    }
-                })
-            }    
+            confirmButtonText: 'Sí, dar de baja',
+            cancelButtonText: 'Cancelar'
         })
+        if (!confirmacion.isConfirmed) return
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post('/jugadores/eliminar', { id })
+            await MostrarSwalSinPreloader(res.title, res.text, res.icon)
+            if (res.status) await getLista()
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', 'No se pudo dar de baja el jugador.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
     }
 
     const Filtrar = () => {
+        const filtro = $('#txtFiltro').val().toUpperCase()
         $('#tablaDatos tbody tr').each(function () {
-            if ($(this).find('td.search').text().toUpperCase().indexOf($('#txtFiltro').val().toUpperCase()) > -1)
-                $(this).closest('tr').show();
-            else
-                $(this).closest('tr').hide();
+            $(this).toggle($(this).find('td.search').text().toUpperCase().includes(filtro))
         })
     }
 
     const CerrarModal = () => {
         $('#modal').modal('hide')
         $('#actionSeccion').addClass('d-none')
-        $('#actionSeccionDivider').addClass('d-none')
-        LimpiarCampos()
-    }
-
-    const LimpiarCampos = () => {
-        $('input[type="text"]').val('')
-        $('textarea').val('')
+        $('#nombre').val('')
+        $('#dorsal').val(0)
         $('#cmbEquipo').val('')
-        $('input[type="checkbox"]').prop('checked', false)
-        $('input[type="radio"]').prop('checked', false)
+        $('#chbActivo').prop('checked', false)
     }
 
+    $('#txtFiltro').on('input', Filtrar)
+    $('#btnNuevo').on('click', () => ModalAccion('a'))
+    $(document).ready(async () => {
+        await ObtenerCmbEquipos(['cmbEquipoFiltro', 'cmbEquipo'], false, {
+            incluirInactivos: true,
+            anexar: true
+        })
+        await getLista()
+    })
 </script>
 {% endblock %}

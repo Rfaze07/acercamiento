@@ -17,7 +17,7 @@
         <input type="text" class="form-control" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
         <div>
             <label>Activos</label>
-            <select class="form-control" id="cmbActivoFiltro" onchange="getLista()">
+            <select class="form-control selectpicker" id="cmbActivoFiltro" onchange="getLista()">
                 <option value="t" selected>Todos</option>
                 <option value="1">Si</option>
                 <option value="0">No</option>
@@ -67,7 +67,7 @@
                     </div>
                     <div class="form-group col-sm-12 col-md-9">
                         <label for="cmbPuesto">Puesto</label>
-                        <select class="form-control form-control-sm" id="cmbPuesto" onchange="SeleccionoPuesto(this.value)"></select>
+                        <select class="form-control form-control-sm selectpicker" id="cmbPuesto" onchange="SeleccionoPuesto(this.value)"></select>
                     </div>
                 </div>
                 <div class="row">
@@ -77,7 +77,7 @@
                     </div>
                     <div class="form-group col-sm-12 col-md-6">
                         <label for="cmbTipoInasistencia">Tipo inasistencia</label>
-                        <select class="form-control form-control-sm" id="cmbTipoInasistencia"></select>
+                        <select class="form-control form-control-sm selectpicker" id="cmbTipoInasistencia"></select>
                     </div>
                 </div>
                 <div class="row">
@@ -147,7 +147,7 @@
                     </div>
                     <div class="form-group col-sm-12 col-md-10">
                         <label for="cmbMedico">Médico</label>
-                        <select class="form-control form-control-sm" id="cmbMedicoCert"></select>
+                        <select class="form-control form-control-sm selectpicker" id="cmbMedicoCert"></select>
                     </div>
                 </div>
                 <div class="row">

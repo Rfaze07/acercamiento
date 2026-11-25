@@ -17,7 +17,7 @@
         <input type="text" class="form-control" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
         <div>
             <label>Activos</label>
-            <select class="form-control" id="cmbActivoFiltro" onchange="getLista()">
+            <select class="form-control selectpicker" id="cmbActivoFiltro" onchange="getLista()">
                 <option value="t" selected>Todos</option>
                 <option value="1">Si</option>
                 <option value="0">No</option>
@@ -500,7 +500,7 @@
                     <div class="form-group row">
                         <label for="cmbEstadoAlert" class="col-sm-3 col-form-label">Estado</label>
                         <div class="col-sm-9">
-                            <select class="form-control" id="cmbEstadoAlert">
+                            <select class="form-control selectpicker" id="cmbEstadoAlert">
                                 <option value="3">Aceptado</option>
                                 <option value="4">Rechazado</option>
                             </select>

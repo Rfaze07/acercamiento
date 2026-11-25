@@ -1,231 +1,160 @@
 {% extends '../../template.html' %}
 
-{% block title %}Bienvenido - Torneo Acercamiento{% endblock %}
-
+{% block title %}Noticias - Básquet La Emilia{% endblock %}
 
 {% block styles %}
-
 <style>
-/* CONTENEDOR */
-.container.my-5 {
-  max-width: 1200px;
-}
-
-/* CARD */
-.card-noticia {
-  border: none;
-  border-radius: 0;
-  background-color: #fff;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  overflow: hidden;
-}
-
-/* HOVER */
-.card-noticia:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
-}
-
-/* IMAGEN */
-.card-noticia img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  filter: grayscale(100%);
-  transition: filter 0.25s ease, transform 0.25s ease;
-}
-
-.card-noticia:hover img {
-  filter: grayscale(0%);
-  transform: scale(1.02);
-}
-
-/* BODY */
-.card-noticia .card-body {
-  padding: 22px;
-}
-
-
-/* TÍTULO DE NOTICIA */
-.titulo {
-  font-size: 1.35rem;
-  font-weight: 800;
-  line-height: 1.35;
-  color: #000;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* SUBTÍTULO */
-.subtitulo {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #666;
-  margin-bottom: 14px;
-  line-height: 1.5;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .titulo {
-    font-size: 1.15rem;
+  .noticias-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem 1rem;
   }
 
-  .subtitulo {
-    font-size: 0.85rem;
-  }
-}
-
-
-/* LINK */
-.leer-mas {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #000;
-  text-decoration: none;
-}
-
-.leer-mas:hover {
-  text-decoration: underline;
-}
-@media (max-width: 768px) {
-  .card-noticia img {
-    height: 200px;
+  .noticias-heading {
+    margin: 1.5rem auto 2rem;
+    text-align: center;
   }
 
-  .card-noticia .card-body {
-    padding: 18px;
+  .noticias-heading h1 {
+    margin-bottom: .65rem;
+    color: #141a22;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    font-weight: 850;
+    letter-spacing: -.04em;
   }
 
-  .card-noticia .card-title {
-    font-size: 1rem;
-  }
-}
-
-/* Contenedor sugerido (opcional) */
-.header-noticias {
-  margin: 40px 0 30px;
-  text-align: center;
-}
-
-/* Título principal */
-.header-noticias h2 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #000;
-  margin-bottom: 12px;
-}
-
-/* Texto introductorio */
-.header-noticias h4 {
-  font-size: 1rem;
-  font-weight: 400;
-  color: #444;
-  max-width: 820px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-@media (max-width: 768px) {
-  .header-noticias h2 {
-    font-size: 1.6rem;
+  .noticias-heading p {
+    max-width: 680px;
+    margin: 0 auto;
+    color: #66717e;
+    line-height: 1.65;
   }
 
-  .header-noticias h4 {
-    font-size: 0.95rem;
-    padding: 0 10px;
+  .noticias-lista {
+    display: grid;
+    gap: 1rem;
   }
-}
-.card-noticia {
-  max-width: 100%;
-}
 
-@media (min-width: 992px) {
-  .card-noticia {
-    max-width: 100%;
+  .noticia-card {
+    border: 1px solid #e3e7ec;
+    border-left: 4px solid #c89b3c;
+    border-radius: .9rem;
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(20, 26, 34, .05);
   }
-}
 
+  .noticia-contenido {
+    padding: clamp(1.1rem, 4vw, 1.7rem);
+  }
 
+  .noticia-fecha {
+    margin-bottom: .55rem;
+    color: #9b7428;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
 
-    
+  .noticia-card h2 {
+    margin: 0 0 .45rem;
+    color: #202630;
+    font-size: clamp(1.15rem, 3vw, 1.5rem);
+    font-weight: 850;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .noticia-subtitulo {
+    margin-bottom: .9rem;
+    color: #687380;
+    font-size: .95rem;
+    font-weight: 650;
+    line-height: 1.5;
+  }
+
+  .noticia-descripcion {
+    margin: 0;
+    color: #45505d;
+    font-size: .95rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  .noticias-vacio {
+    border: 1px dashed #cbd2da;
+    border-radius: 1rem;
+    padding: 2.5rem 1rem;
+    background: #fff;
+    color: #66717e;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .noticias-page {
+      padding-right: .75rem;
+      padding-left: .75rem;
+    }
+  }
 </style>
 {% endblock %}
 
-
 {% block content %}
-    
-<div class="header-noticias">
-  <h2 class="m-0">{{ pagename }}</h2>
-  <h4>
-    Toda la información del torneo en un solo lugar:
-    resultados, partidos, equipos y las noticias más relevantes de cada fecha.
-    SeguÍ de cerca el desarrollo de la competencia y no te pierdas ningún detalle.
-  </h4>
-</div>
-
-<div class="container my-5">
-  <div class="row justify-content-center" id="noticias-container">
-    
-    
-    <!-- repetir -->
-
-  </div>
-</div>
-
-
-
+<main class="noticias-page">
+  <header class="noticias-heading">
+    <h1>{{ pagename }}</h1>
+    <p>Noticias y novedades del Club Social y Deportivo La Emilia, dentro y fuera de la cancha.</p>
+  </header>
+  <section class="noticias-lista" id="noticias-container" aria-live="polite"></section>
+</main>
 {% endblock %}
 
-
-
 {% block scripts %}
+<script>
+  $(document).ready(cargarNoticias);
 
-<script type="text/javascript">
+  function formatearFechaNoticia(fecha) {
+    if (!fecha) return '';
+    const partes = String(fecha).split(/[ T]/)[0].split('-');
+    return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : String(fecha);
+  }
 
-
-$(document).ready(async function() {
-    await getLista()
-});
-
-const getLista = async () => {
-    try {
-        $('#preloaderAPP').show();
-        const res = await $.post('/web/noticias/getLista', {});
-        if (!res.status){
-            return;
-        }
-        const noticias = res.data;
-        for (let i = 0; i < noticias.length; i++) {
-            const noticia = noticias[i];
-            const card = $(`
-            <div class="col-12 col-lg-10">
-              <article class="card card-noticia mb-4">
-                <div class="card-body">
-                <h5 class="titulo">${noticia.titulo}</h5>
-                  <span class="subtitulo">${noticia.subtitulo}</span>
-                  
-                  <p class="card-text">
-                    ${noticia.descripcion}
-                  </p>
-
-                </div>
-              </article>
-            </div>
-            `);
-            $('#noticias-container').append(card);
-        }
-        $('#preloaderAPP').hide();
-    } catch (error) {
-        console.error('Error al obtener la lista de noticias:', error);
+  function construirNoticia(noticia) {
+    const card = $('<article>').addClass('noticia-card');
+    const contenido = $('<div>').addClass('noticia-contenido');
+    const fecha = formatearFechaNoticia(noticia.fecha);
+    if (fecha) contenido.append($('<div>').addClass('noticia-fecha').text(fecha));
+    contenido.append($('<h2>').text(noticia.titulo || 'Noticia'));
+    if (noticia.subtitulo) {
+      contenido.append($('<div>').addClass('noticia-subtitulo').text(noticia.subtitulo));
     }
-};
+    if (noticia.descripcion) {
+      contenido.append($('<p>').addClass('noticia-descripcion').text(noticia.descripcion));
+    }
+    card.append(contenido);
+    return card;
+  }
 
+  async function cargarNoticias() {
+    try {
+      $('#preloaderAPP').show();
+      const res = await $.post('/web/noticias/getLista', {});
+      if (!res.status && res.text) throw new Error(res.text);
 
+      const contenedor = $('#noticias-container').empty();
+      if (!res.data || !res.data.length) {
+        contenedor.append($('<div>')
+          .addClass('noticias-vacio')
+          .text('Todavía no hay noticias publicadas.'));
+        return;
+      }
+      res.data.forEach(noticia => contenedor.append(construirNoticia(noticia)));
+    } catch (error) {
+      console.error('Error al obtener las noticias:', error);
+    } finally {
+      $('#preloaderAPP').hide();
+    }
+  }
 </script>
 {% endblock %}

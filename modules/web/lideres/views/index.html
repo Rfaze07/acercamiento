@@ -1,443 +1,229 @@
 {% extends '../../template.html' %}
 
-{% block title %}Bienvenido - Torneo Acercamiento{% endblock %}
-
+{% block title %}Estadísticas - Básquet La Emilia{% endblock %}
 
 {% block styles %}
-
 <style>
-/* CONTENEDOR */
-.container.my-5 {
-  max-width: 1200px;
-}
-
-/* CARD */
-.card-noticia {
-  border: none;
-  border-radius: 0;
-  background-color: #fff;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  overflow: hidden;
-}
-
-/* HOVER */
-.card-noticia:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
-}
-
-/* IMAGEN */
-.card-noticia img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  filter: grayscale(100%);
-  transition: filter 0.25s ease, transform 0.25s ease;
-}
-
-.card-noticia:hover img {
-  filter: grayscale(0%);
-  transform: scale(1.02);
-}
-
-/* BODY */
-.card-noticia .card-body {
-  padding: 22px;
-}
-
-
-/* TÍTULO DE NOTICIA */
-.titulo {
-  font-size: 1.35rem;
-  font-weight: 800;
-  line-height: 1.35;
-  color: #000;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* SUBTÍTULO */
-.subtitulo {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #666;
-  margin-bottom: 14px;
-  line-height: 1.5;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .titulo {
-    font-size: 1.15rem;
+  .lideres-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem 1rem;
   }
 
-  .subtitulo {
-    font-size: 0.85rem;
-  }
-}
-
-
-/* LINK */
-.leer-mas {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #000;
-  text-decoration: none;
-}
-
-.leer-mas:hover {
-  text-decoration: underline;
-}
-@media (max-width: 768px) {
-  .card-noticia img {
-    height: 200px;
+  .lideres-heading {
+    margin: 1.5rem auto 2rem;
+    text-align: center;
   }
 
-  .card-noticia .card-body {
-    padding: 18px;
+  .lideres-heading h1 {
+    margin-bottom: .65rem;
+    color: #141a22;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    font-weight: 850;
+    letter-spacing: -.04em;
   }
 
-  .card-noticia .card-title {
+  .lideres-heading p {
+    max-width: 700px;
+    margin: 0 auto;
+    color: #66717e;
+    line-height: 1.65;
+  }
+
+  .lideres-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .lider-card {
+    display: none;
+    overflow: hidden;
+    border: 1px solid #e3e7ec;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(20, 26, 34, .05);
+  }
+
+  .lider-card h2 {
+    margin: 0;
+    border-bottom: 1px solid #edf0f3;
+    padding: 1rem 1.2rem;
+    color: #202630;
     font-size: 1rem;
-  }
-}
-
-/* Contenedor sugerido (opcional) */
-.header-noticias {
-  margin: 40px 0 30px;
-  text-align: center;
-}
-
-/* Título principal */
-.header-noticias h2 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #000;
-  margin-bottom: 12px;
-}
-
-/* Texto introductorio */
-.header-noticias h4 {
-  font-size: 1rem;
-  font-weight: 400;
-  color: #444;
-  max-width: 820px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-@media (max-width: 768px) {
-  .header-noticias h2 {
-    font-size: 1.6rem;
+    font-weight: 850;
   }
 
-  .header-noticias h4 {
-    font-size: 0.95rem;
-    padding: 0 10px;
-  }
-}
-.card-noticia {
-  max-width: 100%;
-}
-
-@media (min-width: 992px) {
-  .card-noticia {
-    max-width: 100%;
-  }
-}
-/*TABLAS-------------------*/
-
-
-/* CONTENEDOR */
-.tabla-posiciones {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  padding: 24px;
-}
-
-/* TÍTULO */
-.titulo-tabla {
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #000;
-}
-
-/* TABLA */
-.table-posiciones {
-  margin-bottom: 16px;
-  border: 1px solid #e5e5e5;
-}
-
-.table-posiciones thead {
-  background-color: #000;
-  color: #fff;
-}
-
-.table-posiciones th {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: none;
-}
-
-.table-posiciones td {
-  font-size: 0.9rem;
-  border-top: 1px solid #eaeaea;
-}
-
-/* HOVER */
-.table-posiciones tbody tr:hover {
-  background-color: #f8f8f8;
-}
-
-/* POSICIONES */
-.pos-1 {
-  background-color: #f0f8ff;
-  font-weight: 600;
-}
-
-.pos-2 {
-  background-color: #f7f7f7;
-}
-
-/* NOTA */
-.nota-tabla {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .titulo-tabla {
-    font-size: 0.9rem;
+  .lider-lista {
+    margin: 0;
+    padding: .3rem 1.2rem .7rem;
+    list-style: none;
   }
 
-  .table-posiciones td,
-  .table-posiciones th {
-    font-size: 0.85rem;
+  .lider-item {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .75rem;
+    border-bottom: 1px solid #f0f2f5;
+    padding: .85rem 0;
   }
-}
 
+  .lider-item:last-child {
+    border-bottom: 0;
+  }
 
-    
+  .lider-rango {
+    color: #a0a8b1;
+    font-size: .8rem;
+    font-weight: 850;
+  }
 
+  .lider-nombre {
+    color: #202630;
+    font-size: .92rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
 
+  .lider-equipo {
+    margin-top: .2rem;
+    color: #74808c;
+    font-size: .75rem;
+    line-height: 1.45;
+  }
 
+  .lider-valor {
+    min-width: 3.2rem;
+    border-radius: .65rem;
+    padding: .45rem .55rem;
+    background: #f3ead4;
+    color: #80601e;
+    font-size: .88rem;
+    font-weight: 900;
+    text-align: center;
+    white-space: nowrap;
+  }
 
+  .lider-vacio {
+    padding: 1.25rem;
+    color: #818b96;
+    font-size: .88rem;
+    text-align: center;
+  }
 
+  .lideres-vacio {
+    grid-column: 1 / -1;
+    border: 1px dashed #d9cfb8;
+    border-radius: 1rem;
+    padding: 2rem 1rem;
+    color: #696969;
+    text-align: center;
+  }
 
-    
+  @media (max-width: 760px) {
+    .lideres-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 420px) {
+    .lideres-page {
+      padding-right: .75rem;
+      padding-left: .75rem;
+    }
+
+    .lider-lista {
+      padding-right: .9rem;
+      padding-left: .9rem;
+    }
+  }
 </style>
 {% endblock %}
 
-
 {% block content %}
-    
-<div class="header-noticias">
-  <h2 class="m-0">{{ pagename }}</h2>
-  <h4>
-    En este apartado se presentan los principales registros individuales del torneo, reflejando el rendimiento de los jugadores en las distintas facetas del juego. Los datos permiten analizar el desempeño a lo largo de la competencia y destacar a quienes se han sobresalido en cada rubro.
-  </h4>
-</div>
-
-<div class="container my-5">
-  <div class="row justify-content-center">
-
-    <div class="col-12 col-lg-10 tabla-posiciones">
-
-      <h4 class="titulo-tabla mb-3 text-center">
-        Máximos Anotadores del Torneo
-      </h4>
-
-      <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle" id="tablaGoleadores">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Jugador</th>
-              <th>Equipo</th>
-              <th>Puntos</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+<main class="lideres-page">
+  <header class="lideres-heading">
+    <h1>{{ pagename }}</h1>
+    <p>Consultá el rendimiento de los jugadores en cada competencia y categoría del club.</p>
+  </header>
+  {% include '../../filtros/selectores.html' %}
+  <div class="lideres-grid">
+    <section class="lider-card" data-leaderboard="goleadores" data-value="puntosTotales" data-label="pts">
+      <h2>Máximos anotadores</h2><ol class="lider-lista"></ol>
+    </section>
+    <section class="lider-card" data-leaderboard="asistidores" data-value="asistenciasTotales" data-label="ast">
+      <h2>Máximos asistidores</h2><ol class="lider-lista"></ol>
+    </section>
+    <section class="lider-card" data-leaderboard="reboteadores" data-value="rebotesTotales" data-label="reb">
+      <h2>Máximos reboteadores</h2><ol class="lider-lista"></ol>
+    </section>
+    <section class="lider-card" data-leaderboard="pegadores" data-value="faltasTotales" data-label="fal">
+      <h2>Faltas registradas</h2><ol class="lider-lista"></ol>
+    </section>
   </div>
-</div>
-
-<div class="container my-5">
-  <div class="row justify-content-center">
-
-    <div class="col-12 col-lg-10 tabla-posiciones">
-
-      <h4 class="titulo-tabla mb-3 text-center">
-        Máximos Asistidores del Torneo
-      </h4>
-
-      <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle" id="tablaAsistencias">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Jugador</th>
-              <th>Equipo</th>
-              <th>Asistencias</th>
-            </tr>
-          </thead>
-          <tbody>
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<div class="container my-5">
-  <div class="row justify-content-center">
-
-    <div class="col-12 col-lg-10 tabla-posiciones">
-
-      <h4 class="titulo-tabla mb-3 text-center">
-        Máximos Reboteadores del Torneo
-      </h4>
-
-      <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle" id="tablaRebotes">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Jugador</th>
-              <th>Equipo</th>
-              <th>Rebotes</th>
-            </tr>
-          </thead>
-          <tbody>
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<div class="container my-5">
-  <div class="row justify-content-center">
-
-    <div class="col-12 col-lg-10 tabla-posiciones">
-
-      <h4 class="titulo-tabla mb-3 text-center">
-        Faltas Cometidas del Torneo
-      </h4>
-
-      <div class="table-responsive">
-        <table class="table table-posiciones text-center align-middle" id="tablaFaltas">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Jugador</th>
-              <th>Equipo</th>
-              <th>Faltas</th>
-            </tr>
-          </thead>
-          <tbody>
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-
-
-
+</main>
 {% endblock %}
 
-
-
 {% block scripts %}
+<script src="/js/filtrosWeb.js"></script>
+<script>
+  $(document).ready(function() {
+    window.inicializarFiltrosWeb({
+      selectorResultados: '.lideres-grid',
+      claseVacio: 'lideres-vacio',
+      mensajeInicial: 'Seleccioná una competencia y una categoría para consultar estadísticas.',
+      mensajeError: 'No se pudieron cargar las estadísticas.',
+      limpiarResultados: () => {
+        $('.lideres-grid > .lideres-vacio').remove();
+        $('.lider-lista').empty();
+        $('.lider-card').hide();
+      },
+      buscar: cargarLideres
+    });
+  });
 
-<script type="text/javascript">
-
-
-$(document).ready(async function() {
-    await getLista()
-});
-
-const getLista = async () => {
-    try {
-        $('#preloaderAPP').show();
-        const res = await $.post('/web/lideres/getLista', {});
-        if (!res.status){
-            return;
-        }
-        const goleadores = res.data.goleadores;
-        for (let i = 0; i < goleadores.length; i++) {
-            const goleador = goleadores[i];
-            const row = `<tr class="pos-${i + 1}">
-                            <td>${i + 1}</td>
-                            <td>${goleador.jugador}</td>
-                            <td>${goleador.equipo}</td>
-                            <td>${goleador.puntosTotales}</td>
-                         </tr>`;
-            $('#tablaGoleadores tbody').append(row);
-        }
-
-        const asistencias = res.data.asistidores;
-        for (let i = 0; i < asistencias.length; i++) {
-            const asistente = asistencias[i];
-            const row = `<tr class="pos-${i + 1}">
-                            <td>${i + 1}</td>
-                            <td>${asistente.jugador}</td>
-                            <td>${asistente.equipo}</td>
-                            <td>${asistente.asistenciasTotales}</td>
-                         </tr>`;
-            $('#tablaAsistencias tbody').append(row);
-        }
-        const rebotes = res.data.reboteadores;
-        for (let i = 0; i < rebotes.length; i++) {
-            const reboteador = rebotes[i];
-            const row = `<tr class="pos-${i + 1}">
-                            <td>${i + 1}</td>
-                            <td>${reboteador.jugador}</td>
-                            <td>${reboteador.equipo}</td>
-                            <td>${reboteador.rebotesTotales}</td>
-                         </tr>`;
-            $('#tablaRebotes tbody').append(row);
-        }
-        const faltas = res.data.pegadores;
-        for (let i = 0; i < faltas.length; i++) {
-            const jugadorFaltas = faltas[i];
-            const row = `<tr class="pos-${i + 1}">
-                            <td>${i + 1}</td>
-                            <td>${jugadorFaltas.jugador}</td>
-                            <td>${jugadorFaltas.equipo}</td>
-                            <td>${jugadorFaltas.faltasTotales}</td>
-                         </tr>`;
-            $('#tablaFaltas tbody').append(row);
-        }
-
-        $('#preloaderAPP').hide();
-    } catch (error) {
-        console.error('Error al obtener la lista de noticias:', error);
+  function renderizarRanking(selector, jugadores, claveValor, etiqueta) {
+    const lista = $(selector).empty();
+    if (!jugadores.length) {
+      lista.append($('<li>').addClass('lider-vacio').text('Todavía no hay estadísticas registradas.'));
+      return;
     }
-};
 
+    jugadores.forEach((jugador, indice) => {
+      const item = $('<li>').addClass('lider-item');
+      item.append($('<span>').addClass('lider-rango').text(String(indice + 1).padStart(2, '0')));
 
+      const identidad = $('<div>');
+      identidad.append($('<div>').addClass('lider-nombre').text(jugador.jugador || 'Jugador'));
+      const competencia = [jugador.equipo, jugador.tipoCompetencia, jugador.torneo, jugador.temporada, jugador.categoria]
+        .filter(Boolean)
+        .join(' · ') || 'Competencia histórica';
+      identidad.append($('<div>').addClass('lider-equipo').text(competencia));
+
+      const valor = Number(jugador[claveValor]) || 0;
+      item.append(identidad);
+      item.append($('<span>').addClass('lider-valor').text(`${valor} ${etiqueta}`));
+      lista.append(item);
+    });
+  }
+
+  async function cargarLideres(idTorneo, idCategoria) {
+    const res = await $.post('/web/lideres/getLista', { idTorneo, idCategoria });
+    if (!res.status) throw new Error(res.text || 'No se pudieron cargar las estadísticas');
+
+    $('.lideres-grid > .lideres-vacio').remove();
+    $('[data-leaderboard]').each(function() {
+      const seccion = $(this);
+      const clave = seccion.data('leaderboard');
+      renderizarRanking(
+        seccion.find('.lider-lista'),
+        res.data[clave] || [],
+        seccion.data('value'),
+        seccion.data('label')
+      );
+    });
+    $('.lider-card').show();
+  }
 </script>
 {% endblock %}

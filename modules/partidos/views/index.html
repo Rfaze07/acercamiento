@@ -13,20 +13,46 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center">
     <h2>{{ pagename }}</h2>
-    <div class="d-flex align-items-end mb-3" style="gap: 0.2rem;">
+    <div class="d-flex flex-wrap align-items-end mb-3" style="gap: 0.4rem;">
         <input type="text" class="form-control form-control-sm" id="txtFiltro" placeholder="Buscar" style="width: 10rem;" />
+        <div>
+            <label>Torneo</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbTorneoFiltro" data-live-search="true" onchange="CambiarTorneoFiltro()">
+                <option value="t">Todos</option>
+            </select>
+        </div>
+        <div>
+            <label>Categoría</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbCategoriaFiltro" data-live-search="true" onchange="CambiarCategoriaFiltro()">
+                <option value="t">Todas</option>
+            </select>
+        </div>
+        <div>
+            <label>Fase</label>
+            <select class="form-control form-control-sm selectpicker" id="cmbFaseFiltro" data-live-search="true" onchange="getLista()">
+                <option value="t">Todas</option>
+            </select>
+        </div>
         <div>
             <label>Equipos</label>
             <select class="form-control form-control-sm selectpicker" id="cmbEquipoFiltro" onchange="getLista()"></select>
         </div>
         <div>
             <label>Estado</label>
-            <select class="form-control form-control-sm" id="cmbEstadoFiltro" onchange="getLista()">
+            <select class="form-control form-control-sm selectpicker" id="cmbEstadoFiltro" onchange="getLista()">
                 <option value="t" selected>Todos</option>
                 <option value="0">No comenzado</option>
                 <option value="1">En curso</option>
                 <option value="2">Finalizado</option>
             </select>
+        </div>
+        <div>
+            <label>Desde</label>
+            <input type="date" class="form-control form-control-sm" id="fechaDesdeFiltro" onchange="getLista()" />
+        </div>
+        <div>
+            <label>Hasta</label>
+            <input type="date" class="form-control form-control-sm" id="fechaHastaFiltro" onchange="getLista()" />
         </div>
         {% if permisos.a == 1 %}
         <button class="btn btn-sm btn-round btn-success modalAccion mr-1" data-accion="a" onclick='ModalAccion("a")'>
@@ -38,10 +64,11 @@
 <div class="table-responsive" style="height: calc(100vh - 200px)" id="tablaDatos">
     <table class="table table-sm table-fix table-hover tableFixHead">
         <thead>
-            <tr>
+            <tr data-search="${escaparHtmlPartido(textoBusqueda)}">
                 <th scope="col">Acciones</th>
                 <th scope="col">Fecha y Hora</th>
                 <th scope="col">Equipos</th>
+                <th scope="col">Competencia</th>
                 <th scope="col">Estado</th>
                 <th scope="col">Resultado</th>
             </tr>
@@ -73,14 +100,36 @@
                     </div>
                 </div>
                 <div class="row">
+                    <div class="form-group col-sm-12">
+                        <label for="cmbTorneo">Torneo</label>
+                        <select class="form-control form-control-sm selectpicker" id="cmbTorneo" data-live-search="true">
+                            <option value="">Sin torneo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="cmbCategoria">Categoría</label>
+                        <select class="form-control form-control-sm selectpicker" id="cmbCategoria" data-live-search="true">
+                            <option value="">Sin categoría</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="cmbFase">Fase</label>
+                        <select class="form-control form-control-sm selectpicker" id="cmbFase" data-live-search="true">
+                            <option value="">Sin fase</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="form-group col-sm-12 col-md-6">
                         <label for="cmbEquipoA">Equipo A</label>
-                        <select class="form-control form-control-sm" id="cmbEquipoA">
+                        <select class="form-control form-control-sm selectpicker" id="cmbEquipoA">
                         </select>
                     </div>
                     <div class="form-group col-sm-12 col-md-6">
                         <label for="cmbEquipoB">Equipo B</label>
-                        <select class="form-control form-control-sm" id="cmbEquipoB">
+                        <select class="form-control form-control-sm selectpicker" id="cmbEquipoB">
                         </select>
                     </div>
                 </div>
@@ -105,8 +154,16 @@
 
 {% block scripts %}
 <script>
+    let opcionesClasificacionPartidos = { torneos: [], categorias: [], fases: [] }
+
     $(document).ready(async () => {
         await ObtenerCmbEquipos('cmbEquipoFiltro', true)
+        try {
+            await CargarOpcionesClasificacion()
+        } catch (error) {
+            console.error('Error cargando filtros de clasificación:', error)
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los filtros de torneos.' })
+        }
         //getLista()
         
         // Máscara para fecha dd/mm/yyyy
@@ -136,17 +193,52 @@
     $("#txtFiltro").keyup(async function () {
         Filtrar()
     })
+
+    const escaparHtmlPartido = (valor) => String(valor == null ? '' : valor).replace(/[&<>"']/g, caracter => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[caracter]));
     
     const getLista = async () => {
         $("#preloaderAPP").show()
-        const res = await $.post('/partidos/getListaAjax', { equipo: $('#cmbEquipoFiltro').val(), estado: $('#cmbEstadoFiltro').val()})
+        let res
+        try {
+            res = await $.post('/partidos/getListaAjax', {
+                equipo: $('#cmbEquipoFiltro').val(),
+                estado: $('#cmbEstadoFiltro').val(),
+                torneo: $('#cmbTorneoFiltro').val(),
+                categoria: $('#cmbCategoriaFiltro').val(),
+                fase: $('#cmbFaseFiltro').val(),
+                fecha_desde: $('#fechaDesdeFiltro').val(),
+                fecha_hasta: $('#fechaHastaFiltro').val()
+            })
+        } catch (error) {
+            $("#preloaderAPP").hide()
+            console.error('Error filtrando partidos:', error)
+            const respuesta = error.responseJSON || {}
+            await Swal.fire({ icon: 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudieron cargar los partidos.' })
+            return
+        }
         let html = ""
         if(res.status){
             for (let i = 0; i < res.data.length; i++) {
                 const partido = res.data[i];
-                let accionesHtml = '';
-                if (partido.estado !== 2) {
-                    accionesHtml += `<button class="btn btn-round btn-sm btn-info" data-toggle="tooltip" data-placement="top" title="Planilla Digital" onclick="AbrirPlanillaDigital(${partido.id})"><i class="fa fa-clipboard-list"></i></button>
+                const torneo = [partido.torneo, partido.temporada].filter(Boolean).join(' ')
+                const competencia = [torneo, partido.categoria, partido.fase].filter(Boolean).join(' · ')
+                const textoBusqueda = [
+                    changeDateDMY(partido.fecha_hora.split(' ')[0]),
+                    partido.equipoA,
+                    partido.equipoB,
+                    torneo,
+                    partido.categoria,
+                    partido.fase
+                ].filter(Boolean).join(' ')
+                let accionesHtml = `<button class="btn btn-round btn-sm btn-info" data-toggle="tooltip" data-placement="top" title="Planilla Digital" onclick="AbrirPlanillaDigital(${partido.id})"><i class="fa fa-clipboard-list"></i></button>`;
+                if (partido.estado === 0) {
+                    accionesHtml += `
                     {% if permisos.m == 1 %}
                     <button class="btn btn-round btn-sm btn-warning" data-accion="m" data-toggle="tooltip" data-placement="top" title="Modificar" onclick="ModalAccion('m',${partido.id})"><i class="fa fa-pen"></i></button>
                     {% endif %}
@@ -163,13 +255,14 @@
                             </div>
                         </td>
                         <td class='search'>${changeDateDMY(partido.fecha_hora.split(' ')[0])} ${partido.fecha_hora.split(' ')[1]}</td>
-                        <td>${partido.equipoA} vs ${partido.equipoB}</td>
+                        <td>${escaparHtmlPartido(partido.equipoA)} vs ${escaparHtmlPartido(partido.equipoB)}</td>
+                        <td>${escaparHtmlPartido(competencia) || '—'}</td>
                         <td>${partido.estado === 0 ? 'Sin Comenzar' : partido.estado === 1 ? 'En Curso' : 'Finalizado'}</td>
                         <td>${partido.puntosA} - ${partido.puntosB}</td>
                     </tr>`
             }
         }else{
-            html = `<tr><td class="font-weight-bold" colspan="4">${res.text}</td></tr>`
+            html = `<tr><td class="font-weight-bold" colspan="6">${escaparHtmlPartido(res.text)}</td></tr>`
         }
         $('#tablaDatos tbody').html(html)
         $("#preloaderAPP").hide()
@@ -177,8 +270,14 @@
     }
 
     const ModalAccion = async (accion, id) => {
-        await ObtenerCmbEquipos('cmbEquipoA', false)
-        await ObtenerCmbEquipos('cmbEquipoB', false)
+        try {
+            PrepararClasificacionModal()
+            await CargarEquiposPartido()
+        } catch (error) {
+            console.error('Error preparando el formulario del partido:', error)
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar las categorías y equipos.' })
+            return
+        }
         
         // Aplicar máscaras cuando se abre el modal
         setTimeout(() => {
@@ -211,15 +310,22 @@
             $('#btnAccion').text('Guardar')
         }
         if (accion == 'm') {
-            let res = await $.post(`/partidos/getByIdAjax`, {id})
-            if (res.status != 0) {
+            try {
+                let res = await $.post(`/partidos/getByIdAjax`, {id})
+                if (!res.status) throw new Error(res.text || 'No se pudo cargar el partido')
                 $('#fecha').val(changeDateDMY(res.data.fecha_hora.split(' ')[0]))
                 $('#hora').val(res.data.fecha_hora.split(' ')[1])
+                PrepararClasificacionModal(res.data.id_torneo_fk, res.data.id_torneo_categoria_fk, res.data.id_fase_fk)
+                await CargarEquiposPartido(res.data.id_torneo_categoria_fk, res.data.id_equipoA_fk, res.data.id_equipoB_fk)
                 $('#cmbEquipoA').selectpicker('val', res.data.id_equipoA_fk)
                 $('#cmbEquipoB').selectpicker('val', res.data.id_equipoB_fk)
-                $('#chbActivo').prop('checked', res.data.activo === 1 ? true : false)
+            } catch (error) {
+                $("#preloaderAPP").hide()
+                console.error('Error cargando el partido:', error)
+                await Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los datos del partido.' })
+                return
             }
-            $('#modalLabel').text('Modificar jugador')
+            $('#modalLabel').text('Modificar partido')
             $('#btnAccion').text('Guardar')
             $('#btnAccion').attr('onclick', `PostRegistro("m",${id})`)
             //$('#actionSeccion').removeClass('d-none')
@@ -235,7 +341,10 @@
             body = {
                 fecha_hora: $('#fecha').val() + ' ' + $('#hora').val(),
                 id_equipoA_fk: $('#cmbEquipoA').val(),
-                id_equipoB_fk: $('#cmbEquipoB').val()
+                id_equipoB_fk: $('#cmbEquipoB').val(),
+                id_torneo_fk: $('#cmbTorneo').val(),
+                id_torneo_categoria_fk: $('#cmbCategoria').val(),
+                id_fase_fk: $('#cmbFase').val()
             }
 
         if (accion === 'm') {
@@ -244,19 +353,26 @@
             body.id = Id
         }
 
-        const res = await $.post(url, body)
-        $("#preloaderAPP").hide()
-        Swal.fire({
-            icon: res.icon,
-            title: res.title, 
-            text: res.text, 
-            timer: 2000
-        }).then(() => {
-            if(res.status){
-                CerrarModal()
-                getLista()
-            }
-        })        
+        try {
+            const res = await $.post(url, body)
+            $("#preloaderAPP").hide()
+            Swal.fire({
+                icon: res.icon,
+                title: res.title,
+                text: res.text,
+                timer: 2000
+            }).then(() => {
+                if(res.status){
+                    CerrarModal()
+                    getLista()
+                }
+            })
+        } catch (error) {
+            $("#preloaderAPP").hide()
+            console.error('Error guardando el partido:', error)
+            const respuesta = error.responseJSON || {}
+            await Swal.fire({ icon: respuesta.icon || 'error', title: respuesta.title || 'Error', text: respuesta.text || 'No se pudo guardar el partido.' })
+        }
     }
 
     const Eliminar = (id) => {
@@ -292,12 +408,125 @@
 
     const Filtrar = () => {
         $('#tablaDatos tbody tr').each(function () {
-            if ($(this).find('td.search').text().toUpperCase().indexOf($('#txtFiltro').val().toUpperCase()) > -1)
+            if (($(this).data('search') || $(this).text()).toUpperCase().indexOf($('#txtFiltro').val().toUpperCase()) > -1)
                 $(this).closest('tr').show();
             else
                 $(this).closest('tr').hide();
         })
     }
+
+    const CargarOpcionesClasificacion = async () => {
+        const res = await $.post('/partidos/getOpcionesClasificacionAjax')
+        if (!res.status) throw new Error(res.text || 'No se pudieron cargar las opciones')
+        opcionesClasificacionPartidos = res.data
+        actualizarFiltrosClasificacion()
+    }
+
+    const llenarSelectClasificacion = (selector, elementos, placeholder, valorVacio, texto) => {
+        let html = `<option value="${valorVacio}">${placeholder}</option>`
+        elementos.forEach(elemento => {
+            html += `<option value="${elemento.id}">${escaparHtmlPartido(texto(elemento))}</option>`
+        })
+        $(selector).html(html).selectpicker('refresh')
+    }
+
+    const categoriasPorTorneo = torneoId => opcionesClasificacionPartidos.categorias
+        .filter(categoria => !torneoId || torneoId === 't' || Number(categoria.id_torneo_fk) === Number(torneoId))
+
+    const fasesPorClasificacion = (torneoId, categoriaId) => {
+        if (categoriaId == null || categoriaId === '') return []
+        const categorias = categoriasPorTorneo(torneoId)
+        const idsCategorias = new Set(categorias.map(categoria => Number(categoria.id)))
+        return opcionesClasificacionPartidos.fases.filter(fase =>
+            idsCategorias.has(Number(fase.id_torneo_categoria_fk)) &&
+            (!categoriaId || categoriaId === 't' || Number(fase.id_torneo_categoria_fk) === Number(categoriaId)))
+    }
+
+    const etiquetaTorneo = torneo => [torneo.nombre, torneo.temporada].filter(Boolean).join(' · ')
+    const etiquetaCategoria = categoria => {
+        const torneo = opcionesClasificacionPartidos.torneos.find(item => Number(item.id) === Number(categoria.id_torneo_fk))
+        return torneo ? `${categoria.nombre} · ${etiquetaTorneo(torneo)}` : categoria.nombre
+    }
+    const etiquetaFase = fase => {
+        const categoria = opcionesClasificacionPartidos.categorias.find(item => Number(item.id) === Number(fase.id_torneo_categoria_fk))
+        return [fase.nombre, fase.tipo, categoria ? etiquetaCategoria(categoria) : ''].filter(Boolean).join(' · ')
+    }
+
+    const actualizarFiltrosClasificacion = () => {
+        llenarSelectClasificacion('#cmbTorneoFiltro', opcionesClasificacionPartidos.torneos, 'Todos', 't', etiquetaTorneo)
+        actualizarCategoriasFiltro()
+    }
+
+    const actualizarCategoriasFiltro = () => {
+        const torneoId = $('#cmbTorneoFiltro').val() || 't'
+        llenarSelectClasificacion('#cmbCategoriaFiltro', categoriasPorTorneo(torneoId), 'Todas', 't', etiquetaCategoria)
+        $('#cmbCategoriaFiltro').val('t').selectpicker('refresh')
+        actualizarFasesFiltro()
+    }
+
+    const actualizarFasesFiltro = () => {
+        const torneoId = $('#cmbTorneoFiltro').val() || 't'
+        const categoriaId = $('#cmbCategoriaFiltro').val() || 't'
+        llenarSelectClasificacion('#cmbFaseFiltro', fasesPorClasificacion(torneoId, categoriaId), 'Todas', 't', etiquetaFase)
+        $('#cmbFaseFiltro').val('t').selectpicker('refresh')
+    }
+
+    const CambiarTorneoFiltro = () => {
+        actualizarCategoriasFiltro()
+        getLista()
+    }
+
+    const CambiarCategoriaFiltro = () => {
+        actualizarFasesFiltro()
+        getLista()
+    }
+
+    const PrepararClasificacionModal = (torneoId = '', categoriaId = '', faseId = '') => {
+        llenarSelectClasificacion('#cmbTorneo', opcionesClasificacionPartidos.torneos, 'Sin torneo', '', etiquetaTorneo)
+        $('#cmbTorneo').val(torneoId || '').selectpicker('refresh')
+        llenarSelectClasificacion('#cmbCategoria', categoriasPorTorneo(torneoId), 'Sin categoría', '', etiquetaCategoria)
+        $('#cmbCategoria').val(categoriaId || '').selectpicker('refresh')
+        llenarSelectClasificacion('#cmbFase', fasesPorClasificacion(torneoId, categoriaId), 'Sin fase', '', etiquetaFase)
+        $('#cmbFase').val(faseId || '').selectpicker('refresh')
+    }
+
+    const CargarEquiposPartido = async (categoriaId = '', equipoA = '', equipoB = '') => {
+        let res
+        if (categoriaId) {
+            res = await $.post('/partidos/getEquiposPorCategoriaAjax', { id_categoria: categoriaId })
+        } else if ($('#cmbTorneo').val()) {
+            res = { status: true, data: [] }
+        } else {
+            res = await $.post('/equipos/getListaSelectAjax')
+        }
+        if (!res.status) throw new Error(res.text || 'No se pudieron cargar los equipos')
+        const options = Array.isArray(res.data) ? res.data : []
+        const opcionesHtml = options.map(equipo => `<option value="${equipo.id}">${escaparHtmlPartido(equipo.nombre_inscripcion || equipo.nombre)}</option>`).join('')
+        $('#cmbEquipoA, #cmbEquipoB').html(opcionesHtml).selectpicker('refresh')
+        if (equipoA) $('#cmbEquipoA').selectpicker('val', equipoA)
+        if (equipoB) $('#cmbEquipoB').selectpicker('val', equipoB)
+    }
+
+    $('#cmbTorneo').on('change', async function () {
+        llenarSelectClasificacion('#cmbCategoria', categoriasPorTorneo($(this).val()), 'Sin categoría', '', etiquetaCategoria)
+        llenarSelectClasificacion('#cmbFase', [], 'Sin fase', '', etiquetaFase)
+        try {
+            await CargarEquiposPartido()
+        } catch (error) {
+            console.error('Error filtrando equipos por torneo:', error)
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los equipos.' })
+        }
+    })
+
+    $('#cmbCategoria').on('change', async function () {
+        llenarSelectClasificacion('#cmbFase', fasesPorClasificacion($('#cmbTorneo').val(), $(this).val()), 'Sin fase', '', etiquetaFase)
+        try {
+            await CargarEquiposPartido($(this).val())
+        } catch (error) {
+            console.error('Error filtrando equipos por categoría:', error)
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los equipos de la categoría.' })
+        }
+    })
 
     const CerrarModal = () => {
         $('#modal').modal('hide')

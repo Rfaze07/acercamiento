@@ -1,62 +1,79 @@
 const { queryMYSQL } = require("../../../database")
 
+exports.execQuery = (query, params) => queryMYSQL(query, params)
 
-exports.execQuery = (query, params) => {
-    return queryMYSQL(query, params)
-}
+const getLeaderboard = (eventFilter, aggregate, totalAlias, idTorneo, idCategoria) => queryMYSQL(`
+    SELECT
+        j.id AS idJugador,
+        j.nombre AS jugador,
+        COALESCE(te.nombre_inscripcion, e.nombre) AS equipo,
+        tipo.nombre AS tipoCompetencia,
+        t.nombre AS torneo,
+        t.temporada,
+        tc.nombre AS categoria,
+        ${aggregate} AS ${totalAlias}
+    FROM eventos_partido ep
+    INNER JOIN partidos p ON p.id = ep.id_partido_fk
+    INNER JOIN jugadores j ON j.id = ep.id_jugador_fk
+    LEFT JOIN partidos_jugadores pj
+        ON pj.id_partido_fk = ep.id_partido_fk
+        AND pj.id_jugador_fk = ep.id_jugador_fk
+    LEFT JOIN equipos e ON e.id = COALESCE(pj.id_equipo_fk, j.id_equipo_fk)
+    LEFT JOIN torneos_categorias tc ON tc.id = p.id_torneo_categoria_fk
+    LEFT JOIN torneos t ON t.id = tc.id_torneo_fk
+    LEFT JOIN tipos_competencia tipo ON tipo.id = t.id_tipo_competencia_fk
+    LEFT JOIN torneos_equipos te
+        ON te.id_torneo_categoria_fk = tc.id
+        AND te.id_equipo_fk = COALESCE(pj.id_equipo_fk, j.id_equipo_fk)
+    WHERE ${eventFilter}
+        AND t.id = ?
+        AND tc.id = ?
+    GROUP BY
+        j.id,
+        j.nombre,
+        COALESCE(pj.id_equipo_fk, j.id_equipo_fk),
+        COALESCE(te.nombre_inscripcion, e.nombre),
+        e.id,
+        te.id,
+        t.id,
+        t.nombre,
+        t.temporada,
+        tipo.id,
+        tipo.nombre,
+        tc.id,
+        tc.nombre
+    ORDER BY ${totalAlias} DESC, j.nombre ASC
+    LIMIT 10
+`, [idTorneo, idCategoria])
 
-exports.getAll = () => {
-    return queryMYSQL(`
-        SELECT *
-        FROM noticias n
-        ORDER BY n.fecha DESC, n.id DESC
-    `, [])
-}
+exports.getMayoresGoleadores = (idTorneo, idCategoria) => getLeaderboard(
+    "ep.evento = 'puntos'",
+    "SUM(ep.valor)",
+    "puntosTotales",
+    idTorneo,
+    idCategoria
+)
 
-exports.getMayoresGoleadores = () => {
-    return queryMYSQL(`
-         select j.nombre AS jugador, e.nombre as equipo, SUM(ep.valor) as puntosTotales
-        from eventos_partido ep
-        left join jugadores j on j.id = ep.id_jugador_fk
-        left join equipos e on e.id = j.id_equipo_fk 
-        WHERE ep.evento = 'puntos'
-        GROUP BY j.id
-        ORDER BY puntosTotales DESC
-        LIMIT 10`, [])
-}
+exports.getMayoresAsistidores = (idTorneo, idCategoria) => getLeaderboard(
+    "ep.evento = 'asistencias'",
+    "COUNT(*)",
+    "asistenciasTotales",
+    idTorneo,
+    idCategoria
+)
 
-exports.getMayoresAsistidores = () => {
-    return queryMYSQL(`
-         select j.nombre AS jugador, e.nombre as equipo, SUM(ep.valor) as asistenciasTotales
-        from eventos_partido ep
-        left join jugadores j on j.id = ep.id_jugador_fk
-        left join equipos e on e.id = j.id_equipo_fk
-        WHERE ep.evento = 'asistencias'
-        GROUP BY j.id
-        ORDER BY asistenciasTotales DESC
-        LIMIT 10`, [])
-}
+exports.getMayoresReboteadores = (idTorneo, idCategoria) => getLeaderboard(
+    "ep.evento = 'rebotes'",
+    "COUNT(*)",
+    "rebotesTotales",
+    idTorneo,
+    idCategoria
+)
 
-exports.getMayoresReboteadores = () => {
-    return queryMYSQL(`
-         select j.nombre AS jugador, e.nombre as equipo, SUM(ep.valor) as rebotesTotales
-        from eventos_partido ep
-        left join jugadores j on j.id = ep.id_jugador_fk
-        left join equipos e on e.id = j.id_equipo_fk
-        WHERE ep.evento = 'rebotes'
-        GROUP BY j.id
-        ORDER BY rebotesTotales DESC
-        LIMIT 10`, [])
-}
-
-exports.getMayoresPegadores = () => {
-    return queryMYSQL(`
-            select j.nombre AS jugador, e.nombre as equipo, SUM(ep.valor) as faltasTotales
-            from eventos_partido ep
-            left join jugadores j on j.id = ep.id_jugador_fk
-            left join equipos e on e.id = j.id_equipo_fk
-            WHERE ep.evento = 'faltas' or ep.evento = 'falta_tecnica' or ep.evento = 'falta_antideportiva'
-            GROUP BY j.id
-            ORDER BY faltasTotales DESC
-            LIMIT 10`, [])
-}
+exports.getMayoresPegadores = (idTorneo, idCategoria) => getLeaderboard(
+    "ep.evento IN ('faltas', 'falta_tecnica', 'falta_antideportiva')",
+    "COUNT(*)",
+    "faltasTotales",
+    idTorneo,
+    idCategoria
+)

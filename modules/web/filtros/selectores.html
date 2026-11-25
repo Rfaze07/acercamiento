@@ -1,0 +1,38 @@
+<section class="web-filtros" aria-label="Filtros de competencia">
+  <div class="web-filtros-cabecera">
+    <span class="web-filtros-kicker">Explorá el club</span>
+    <h2>Elegí una competencia y categoría</h2>
+    <p>Los resultados se mostrarán para la competencia y categoría seleccionadas.</p>
+  </div>
+  <div class="row align-items-end">
+    <div class="col-12 col-md-5 mb-3">
+      <label class="web-filtro-label" for="filtroCompetencia">Competencia</label>
+      <select class="selectpicker form-control" id="filtroCompetencia"
+        data-live-search="true" data-width="100%">
+        <option value="">Seleccionar competencia</option>
+        {% for competencia in filtros.competencias %}
+        <option value="{{ competencia.id }}">
+          {{ competencia.tipo|escape }} · {{ competencia.nombre|escape }}{% if competencia.temporada %} · {{ competencia.temporada|escape }}{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-5 mb-3">
+      <label class="web-filtro-label" for="filtroCategoria">Categoría</label>
+      <select class="selectpicker form-control" id="filtroCategoria"
+        data-live-search="true" data-width="100%" disabled>
+        <option value="">Primero seleccioná una competencia</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-2 mb-3">
+      <button class="btn btn-web-buscar w-100" type="button" id="btnBuscar" disabled>Buscar</button>
+    </div>
+  </div>
+</section>
+<select id="categoriasDisponibles" class="d-none" tabindex="-1" aria-hidden="true">
+  {% for categoria in filtros.categorias %}
+  <option value="{{ categoria.id }}" data-torneo="{{ categoria.idTorneo }}">
+    {{ categoria.nombre|escape }} · {{ categoria.rama|escape }}
+  </option>
+  {% endfor %}
+</select>

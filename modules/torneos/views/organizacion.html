@@ -1,0 +1,625 @@
+{% extends '../../template.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-1">{{ torneo.nombre }}</h2>
+        <p class="text-muted mb-0">Organización del torneo · {{ torneo.temporada || 'Sin temporada' }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="/torneos"><i class="fa fa-arrow-left"></i> Volver a torneos</a>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tabCategorias" role="tab">Categorías</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabInscripciones" role="tab">Equipos participantes</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabPlanteles" role="tab">Planteles</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabFases" role="tab">Fases</a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabGrupos" role="tab">Grupos</a></li>
+</ul>
+
+<div class="tab-content">
+    <section class="tab-pane fade show active" id="tabCategorias" role="tabpanel">
+        {% if permisos.a == 1 || permisos.m == 1 %}
+        <form id="formCategoria" class="border rounded p-3 mb-3">
+            <input type="hidden" name="id">
+            <h5 id="tituloCategoria">Nueva categoría</h5>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="categoriaNombre">Nombre</label>
+                    <input class="form-control form-control-sm" id="categoriaNombre" name="nombre" maxlength="60" required>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="categoriaRama">Rama</label>
+                    <select class="form-control form-control-sm selectpicker" id="categoriaRama" name="rama">
+                        <option value="no_aplica">No aplica</option>
+                        <option value="masculina">Masculina</option>
+                        <option value="femenina">Femenina</option>
+                        <option value="mixta">Mixta</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="categoriaEdadDesde">Edad desde</label>
+                    <input class="form-control form-control-sm" id="categoriaEdadDesde" name="edad_desde" type="number" min="0" max="120">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="categoriaEdadHasta">Edad hasta</label>
+                    <input class="form-control form-control-sm" id="categoriaEdadHasta" name="edad_hasta" type="number" min="0" max="120">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="categoriaFormato">Formato</label>
+                    <select class="form-control form-control-sm selectpicker" id="categoriaFormato" name="formato">
+                        <option value="liga">Liga</option>
+                        <option value="grupos">Grupos</option>
+                        <option value="eliminacion">Eliminación</option>
+                        <option value="amistoso">Amistoso</option>
+                        <option value="personalizado">Personalizado</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="categoriaOrden">Orden</label>
+                    <input class="form-control form-control-sm" id="categoriaOrden" name="orden" type="number" min="0" value="0" required>
+                </div>
+                <div class="form-group col-md-10">
+                    <label for="categoriaObservaciones">Observaciones</label>
+                    <input class="form-control form-control-sm" id="categoriaObservaciones" name="observaciones" maxlength="500">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Guardar categoría</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFormulario('formCategoria')">Cancelar</button>
+        </form>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Categoría</th><th>Rama</th><th>Edades</th><th>Formato</th><th>Orden</th></tr></thead>
+                <tbody id="tablaCategorias"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tab-pane fade" id="tabInscripciones" role="tabpanel">
+        {% if permisos.a == 1 || permisos.m == 1 %}
+        <form id="formInscripcion" class="border rounded p-3 mb-3">
+            <input type="hidden" name="id">
+            <h5 id="tituloInscripcion">Inscribir equipo</h5>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="inscripcionCategoria">Categoría</label>
+                    <select class="form-control form-control-sm selectpicker" id="inscripcionCategoria" name="id_torneo_categoria_fk" required></select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="inscripcionEquipo">Equipo</label>
+                    <select class="form-control form-control-sm selectpicker" id="inscripcionEquipo" name="id_equipo_fk" required></select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="inscripcionNombre">Nombre para el torneo (opcional)</label>
+                    <input class="form-control form-control-sm" id="inscripcionNombre" name="nombre_inscripcion" maxlength="80">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="inscripcionEstado">Estado</label>
+                    <select class="form-control form-control-sm selectpicker" id="inscripcionEstado" name="estado">
+                        <option value="confirmado">Confirmado</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="rechazado">Rechazado</option>
+                    </select>
+                </div>
+                <div class="form-group col-12">
+                    <label for="inscripcionObservaciones">Observaciones</label>
+                    <input class="form-control form-control-sm" id="inscripcionObservaciones" name="observaciones" maxlength="500">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Guardar inscripción</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFormulario('formInscripcion')">Cancelar</button>
+        </form>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Categoría</th><th>Equipo</th><th>Nombre de inscripción</th><th>Estado</th><th>Jugadores</th></tr></thead>
+                <tbody id="tablaInscripciones"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tab-pane fade" id="tabPlanteles" role="tabpanel">
+        <p class="text-muted">El plantel y los dorsales pertenecen a la inscripción del equipo en este torneo.</p>
+        {% if permisos.a == 1 || permisos.m == 1 %}
+        <form id="formPlantel" class="border rounded p-3 mb-3">
+            <input type="hidden" name="id">
+            <h5 id="tituloPlantel">Agregar jugador al plantel</h5>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="plantelInscripcion">Equipo inscripto</label>
+                    <select class="form-control form-control-sm selectpicker" id="plantelInscripcion" name="id_torneo_equipo_fk" required></select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="plantelJugador">Jugador</label>
+                    <select class="form-control form-control-sm selectpicker" id="plantelJugador" name="id_jugador_fk" required></select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="plantelDorsal">Dorsal</label>
+                    <input class="form-control form-control-sm" id="plantelDorsal" name="dorsal" type="number" min="0" max="99">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="plantelEstado">Estado</label>
+                    <select class="form-control form-control-sm selectpicker" id="plantelEstado" name="estado">
+                        <option value="activo">Activo</option>
+                        <option value="suspendido">Suspendido</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="plantelFechaAlta">Fecha de alta</label>
+                    <input class="form-control form-control-sm" id="plantelFechaAlta" name="fecha_alta" type="date">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="plantelFechaBaja">Fecha de baja</label>
+                    <input class="form-control form-control-sm" id="plantelFechaBaja" name="fecha_baja" type="date">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="plantelObservaciones">Observaciones</label>
+                    <input class="form-control form-control-sm" id="plantelObservaciones" name="observaciones" maxlength="500">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Guardar jugador</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFormulario('formPlantel')">Cancelar</button>
+        </form>
+        {% endif %}
+        <div class="form-group col-md-5 px-0">
+            <label for="filtroPlantel">Ver plantel de</label>
+            <select class="form-control form-control-sm selectpicker" id="filtroPlantel"></select>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Jugador</th><th>Dorsal</th><th>Estado</th><th>Fechas</th><th>Observaciones</th></tr></thead>
+                <tbody id="tablaPlantel"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tab-pane fade" id="tabFases" role="tabpanel">
+        {% if permisos.a == 1 || permisos.m == 1 %}
+        <form id="formFase" class="border rounded p-3 mb-3">
+            <input type="hidden" name="id">
+            <h5 id="tituloFase">Nueva fase</h5>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="faseCategoria">Categoría</label>
+                    <select class="form-control form-control-sm selectpicker" id="faseCategoria" name="id_torneo_categoria_fk" required></select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="faseNombre">Nombre</label>
+                    <input class="form-control form-control-sm" id="faseNombre" name="nombre" maxlength="100" required>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="faseTipo">Tipo</label>
+                    <select class="form-control form-control-sm selectpicker" id="faseTipo" name="tipo">
+                        <option value="regular">Regular</option>
+                        <option value="grupos">Grupos</option>
+                        <option value="eliminacion">Eliminación</option>
+                        <option value="playoff">Playoff</option>
+                        <option value="final">Final</option>
+                        <option value="amistoso">Amistoso</option>
+                        <option value="personalizada">Personalizada</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="faseFormato">Formato</label>
+                    <select class="form-control form-control-sm selectpicker" id="faseFormato" name="formato">
+                        <option value="liga">Liga</option>
+                        <option value="grupos">Grupos</option>
+                        <option value="eliminacion">Eliminación</option>
+                        <option value="amistoso">Amistoso</option>
+                        <option value="personalizado">Personalizado</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-1">
+                    <label for="faseOrden">Orden</label>
+                    <input class="form-control form-control-sm" id="faseOrden" name="orden" type="number" min="1" value="1" required>
+                </div>
+                <div class="form-group col-md-1">
+                    <label for="faseRuedas">Ruedas</label>
+                    <input class="form-control form-control-sm" id="faseRuedas" name="cantidad_ruedas" type="number" min="1" max="255" value="1" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Guardar fase</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFormulario('formFase')">Cancelar</button>
+        </form>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Categoría</th><th>Fase</th><th>Tipo</th><th>Formato</th><th>Orden</th><th>Ruedas</th></tr></thead>
+                <tbody id="tablaFases"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tab-pane fade" id="tabGrupos" role="tabpanel">
+        {% if permisos.a == 1 || permisos.m == 1 %}
+        <form id="formGrupo" class="border rounded p-3 mb-3">
+            <input type="hidden" name="id">
+            <h5 id="tituloGrupo">Nuevo grupo</h5>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="grupoFase">Fase</label>
+                    <select class="form-control form-control-sm selectpicker" id="grupoFase" name="id_fase_fk" required></select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="grupoNombre">Nombre</label>
+                    <input class="form-control form-control-sm" id="grupoNombre" name="nombre" maxlength="60" required>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="grupoOrden">Orden</label>
+                    <input class="form-control form-control-sm" id="grupoOrden" name="orden" type="number" min="0" value="0" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Guardar grupo</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="limpiarFormulario('formGrupo')">Cancelar</button>
+        </form>
+        {% endif %}
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Categoría</th><th>Fase</th><th>Grupo</th><th>Orden</th></tr></thead>
+                <tbody id="tablaGrupos"></tbody>
+            </table>
+        </div>
+        <h5>Equipos por grupo</h5>
+        {% if permisos.a == 1 %}
+        <form id="formGrupoEquipo" class="border rounded p-3 mb-3">
+            <div class="form-row align-items-end">
+                <div class="form-group col-md-5">
+                    <label for="asignacionGrupo">Grupo</label>
+                    <select class="form-control form-control-sm selectpicker" id="asignacionGrupo" name="id_grupo_fk" required></select>
+                </div>
+                <div class="form-group col-md-5">
+                    <label for="asignacionInscripcion">Equipo inscripto en la categoría</label>
+                    <select class="form-control form-control-sm selectpicker" id="asignacionInscripcion" name="id_torneo_equipo_fk" required></select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="asignacionOrden">Orden</label>
+                    <input class="form-control form-control-sm" id="asignacionOrden" name="orden" type="number" min="0" value="0" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success">Agregar equipo al grupo</button>
+        </form>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead><tr><th>Acciones</th><th>Equipo</th><th>Categoría</th><th>Grupo</th><th>Orden</th></tr></thead>
+                <tbody id="tablaEquiposGrupo"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const torneoId = {{ torneo.id }}
+    const datosOrganizacionUrl = `/torneos/${torneoId}/organizacion/datos`
+    let organizacion = {}
+    const escapar = valor => $('<div>').text(valor == null ? '' : valor).html()
+    const formatoRama = { masculina: 'Masculina', femenina: 'Femenina', mixta: 'Mixta', no_aplica: 'No aplica' }
+    const formatoEstadoInscripcion = { pendiente: 'Pendiente', confirmado: 'Confirmado', rechazado: 'Rechazado', retirado: 'Retirado' }
+    const formatoEstadoPlantel = { activo: 'Activo', baja: 'Baja', suspendido: 'Suspendido' }
+
+    const opcionLabel = (label, text) => `${label}${text ? ` · ${text}` : ''}`
+    const actualizarSelect = (selector, items, placeholder, value, label) => {
+        const $select = $(selector)
+        const opciones = [`<option value="">${escapar(placeholder)}</option>`]
+        for (const item of items) {
+            opciones.push(`<option value="${Number(value(item))}">${escapar(label(item))}</option>`)
+        }
+        $select.html(opciones.join('')).selectpicker('refresh')
+    }
+
+    const cargarCombos = () => {
+        actualizarSelect('#inscripcionCategoria, #faseCategoria', organizacion.categorias, 'Seleccione una categoría', item => item.id, item => item.nombre)
+        actualizarSelect('#inscripcionEquipo', organizacion.equipos, 'Seleccione un equipo', item => item.id, item => item.nombre)
+        actualizarSelect('#plantelInscripcion, #filtroPlantel', organizacion.inscripciones, 'Seleccione una inscripción',
+            item => item.id, item => `${item.categoria} · ${item.nombre_inscripcion || item.equipo}`)
+        actualizarSelect('#plantelJugador', organizacion.jugadores, 'Seleccione un jugador', item => item.id, item => item.nombre)
+        actualizarSelect('#grupoFase', organizacion.fases, 'Seleccione una fase', item => item.id, item => `${item.categoria} · ${item.nombre}`)
+        actualizarSelect('#asignacionGrupo', organizacion.grupos, 'Seleccione un grupo', item => item.id, item => `${item.categoria} · ${item.fase} · ${item.nombre}`)
+        actualizarInscripcionesPorGrupo()
+    }
+
+    const actualizarInscripcionesPorGrupo = () => {
+        const grupo = organizacion.grupos.find(item => Number(item.id) === Number($('#asignacionGrupo').val()))
+        const inscripciones = grupo
+            ? organizacion.inscripciones.filter(item => Number(item.id_torneo_categoria_fk) === Number(grupo.id_torneo_categoria_fk))
+            : []
+        actualizarSelect('#asignacionInscripcion', inscripciones, 'Seleccione un equipo inscripto', item => item.id,
+            item => item.nombre_inscripcion || item.equipo)
+        pintarEquiposGrupo()
+    }
+
+    const botones = (editar, eliminar) => `<div class="d-flex" style="gap:2px;">${editar || ''}${eliminar || ''}</div>`
+    const botonEditar = funcion => `<button type="button" class="btn btn-sm btn-warning" title="Modificar" onclick="${funcion}"><i class="fa fa-pen"></i></button>`
+    const botonEliminar = (tipo, id) => `<button type="button" class="btn btn-sm btn-danger" title="Dar de baja" onclick="eliminarRegistro('${tipo}',${Number(id)})"><i class="fa fa-trash-alt"></i></button>`
+    const filaVacia = columnas => `<tr><td colspan="${columnas}" class="text-center text-muted">No hay registros para mostrar</td></tr>`
+
+    const pintarCategorias = () => {
+        let html = ''
+        for (const item of organizacion.categorias) {
+            const edades = item.edad_desde == null && item.edad_hasta == null
+                ? '—'
+                : `${item.edad_desde == null ? '?' : item.edad_desde} a ${item.edad_hasta == null ? '?' : item.edad_hasta}`
+            html += `<tr>
+                <td>${botones(
+                    {% if permisos.m == 1 %}botonEditar(`editarCategoria(${Number(item.id)})`){% else %}''{% endif %},
+                    {% if permisos.b == 1 %}botonEliminar('categoria', item.id){% else %}''{% endif %}
+                )}</td>
+                <td>${escapar(item.nombre)}</td><td>${formatoRama[item.rama] || escapar(item.rama)}</td>
+                <td>${escapar(edades)}</td><td>${escapar(item.formato)}</td><td>${Number(item.orden)}</td>
+            </tr>`
+        }
+        $('#tablaCategorias').html(html || filaVacia(6))
+    }
+
+    const pintarInscripciones = () => {
+        let html = ''
+        for (const item of organizacion.inscripciones) {
+            html += `<tr>
+                <td>${botones(
+                    {% if permisos.m == 1 %}botonEditar(`editarInscripcion(${Number(item.id)})`){% else %}''{% endif %},
+                    {% if permisos.b == 1 %}botonEliminar('inscripcion', item.id){% else %}''{% endif %}
+                )}<button type="button" class="btn btn-sm btn-info ml-1" title="Administrar plantel" onclick="verPlantel(${Number(item.id)})"><i class="fa fa-users"></i></button></td>
+                <td>${escapar(item.categoria)}</td><td>${escapar(item.equipo)}</td>
+                <td>${escapar(item.nombre_inscripcion || '—')}</td>
+                <td>${formatoEstadoInscripcion[item.estado] || escapar(item.estado)}</td>
+                <td>${Number(item.cantidad_jugadores)}</td>
+            </tr>`
+        }
+        $('#tablaInscripciones').html(html || filaVacia(6))
+    }
+
+    const pintarPlantel = () => {
+        const inscripcionId = Number($('#filtroPlantel').val())
+        const jugadores = organizacion.planteles.filter(item => Number(item.id_torneo_equipo_fk) === inscripcionId)
+        let html = ''
+        for (const item of jugadores) {
+            const fechas = [item.fecha_alta, item.fecha_baja].filter(Boolean).join(' - ') || '—'
+            html += `<tr>
+                <td>${botones(
+                    {% if permisos.m == 1 %}botonEditar(`editarPlantel(${Number(item.id)})`){% else %}''{% endif %},
+                    {% if permisos.b == 1 %}botonEliminar('plantel', item.id){% else %}''{% endif %}
+                )}</td>
+                <td>${escapar(item.jugador)}</td><td>${item.dorsal == null ? '—' : Number(item.dorsal)}</td>
+                <td>${formatoEstadoPlantel[item.estado] || escapar(item.estado)}</td>
+                <td>${escapar(fechas)}</td><td>${escapar(item.observaciones || '—')}</td>
+            </tr>`
+        }
+        $('#tablaPlantel').html(html || filaVacia(6))
+    }
+
+    const pintarFases = () => {
+        let html = ''
+        for (const item of organizacion.fases) {
+            html += `<tr>
+                <td>${botones(
+                    {% if permisos.m == 1 %}botonEditar(`editarFase(${Number(item.id)})`){% else %}''{% endif %},
+                    {% if permisos.b == 1 %}botonEliminar('fase', item.id){% else %}''{% endif %}
+                )}</td>
+                <td>${escapar(item.categoria)}</td><td>${escapar(item.nombre)}</td><td>${escapar(item.tipo)}</td>
+                <td>${escapar(item.formato)}</td><td>${Number(item.orden)}</td><td>${Number(item.cantidad_ruedas)}</td>
+            </tr>`
+        }
+        $('#tablaFases').html(html || filaVacia(7))
+    }
+
+    const pintarGrupos = () => {
+        let html = ''
+        for (const item of organizacion.grupos) {
+            html += `<tr>
+                <td>${botones(
+                    {% if permisos.m == 1 %}botonEditar(`editarGrupo(${Number(item.id)})`){% else %}''{% endif %},
+                    {% if permisos.b == 1 %}botonEliminar('grupo', item.id){% else %}''{% endif %}
+                )}</td>
+                <td>${escapar(item.categoria)}</td><td>${escapar(item.fase)}</td><td>${escapar(item.nombre)}</td><td>${Number(item.orden)}</td>
+            </tr>`
+        }
+        $('#tablaGrupos').html(html || filaVacia(5))
+    }
+
+    const pintarEquiposGrupo = () => {
+        const grupoId = Number($('#asignacionGrupo').val())
+        const equipos = organizacion.equiposPorGrupo.filter(item => Number(item.id_grupo_fk) === grupoId)
+        let html = ''
+        for (const item of equipos) {
+            html += `<tr>
+                <td>{% if permisos.b == 1 %}${botonEliminar('grupoEquipo', item.id)}{% endif %}</td>
+                <td>${escapar(item.equipo)}</td><td>${escapar(item.categoria)}</td>
+                <td>${escapar(item.grupo)}</td><td>${Number(item.orden)}</td>
+            </tr>`
+        }
+        $('#tablaEquiposGrupo').html(html || filaVacia(5))
+    }
+
+    const pintar = () => {
+        pintarCategorias()
+        pintarInscripciones()
+        pintarPlantel()
+        pintarFases()
+        pintarGrupos()
+        actualizarInscripcionesPorGrupo()
+    }
+
+    const cargarOrganizacion = async () => {
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post(datosOrganizacionUrl)
+            if (!res.status) throw new Error(res.text || 'No se pudo cargar la organización')
+            organizacion = res.data
+            cargarCombos()
+            pintar()
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', error.message || 'No se pudo cargar la organización del torneo.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const limpiarFormulario = formId => {
+        const form = document.getElementById(formId)
+        if (!form) return
+        form.reset()
+        $(form).find('input[type=hidden]').val('')
+        $(form).find('select.selectpicker').prop('disabled', false).selectpicker('refresh')
+        const titulos = {
+            formCategoria: ['tituloCategoria', 'Nueva categoría'],
+            formInscripcion: ['tituloInscripcion', 'Inscribir equipo'],
+            formPlantel: ['tituloPlantel', 'Agregar jugador al plantel'],
+            formFase: ['tituloFase', 'Nueva fase'],
+            formGrupo: ['tituloGrupo', 'Nuevo grupo']
+        }
+        if (titulos[formId]) $(`#${titulos[formId][0]}`).text(titulos[formId][1])
+    }
+
+    const datosFormulario = form => {
+        const datos = {}
+        $(form).serializeArray().forEach(item => { datos[item.name] = item.value })
+        return datos
+    }
+
+    const guardarFormulario = async (entidad, formId) => {
+        const form = document.getElementById(formId)
+        const datos = datosFormulario(form)
+        const accion = datos.id ? 'modificar' : 'alta'
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post(`/torneos/${torneoId}/organizacion/${entidad}/${accion}`, datos)
+            await MostrarSwalSinPreloader(res.title || 'Éxito', res.text || 'Los datos se guardaron correctamente', res.icon || 'success')
+            if (res.status) {
+                limpiarFormulario(formId)
+                await cargarOrganizacion()
+            }
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', error.responseText || 'No se pudieron guardar los datos.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const eliminarRegistro = async (entidad, id) => {
+        const confirmacion = await Swal.fire({
+            title: 'Dar de baja',
+            text: 'El registro se conservará en el sistema. ¿Desea continuar?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, dar de baja',
+            cancelButtonText: 'Cancelar'
+        })
+        if (!confirmacion.isConfirmed) return
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post(`/torneos/${torneoId}/organizacion/${entidad}/eliminar`, { id })
+            await MostrarSwalSinPreloader(res.title || 'Éxito', res.text || 'El registro se dio de baja correctamente', res.icon || 'success')
+            if (res.status) await cargarOrganizacion()
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', error.responseText || 'No se pudo dar de baja el registro.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    }
+
+    const editarCategoria = id => {
+        const item = organizacion.categorias.find(row => Number(row.id) === id)
+        if (!item) return
+        const form = $('#formCategoria')
+        form.find('[name=id]').val(item.id)
+        form.find('[name=nombre]').val(item.nombre)
+        form.find('[name=rama]').selectpicker('val', item.rama)
+        form.find('[name=edad_desde]').val(item.edad_desde)
+        form.find('[name=edad_hasta]').val(item.edad_hasta)
+        form.find('[name=formato]').selectpicker('val', item.formato)
+        form.find('[name=orden]').val(item.orden)
+        form.find('[name=observaciones]').val(item.observaciones)
+        $('#tituloCategoria').text('Modificar categoría')
+    }
+
+    const editarInscripcion = id => {
+        const item = organizacion.inscripciones.find(row => Number(row.id) === id)
+        if (!item) return
+        const form = $('#formInscripcion')
+        form.find('[name=id]').val(item.id)
+        form.find('[name=id_torneo_categoria_fk]').selectpicker('val', item.id_torneo_categoria_fk).prop('disabled', true).selectpicker('refresh')
+        form.find('[name=id_equipo_fk]').selectpicker('val', item.id_equipo_fk).prop('disabled', true).selectpicker('refresh')
+        form.find('[name=nombre_inscripcion]').val(item.nombre_inscripcion)
+        form.find('[name=estado]').selectpicker('val', item.estado)
+        form.find('[name=observaciones]').val(item.observaciones)
+        $('#tituloInscripcion').text('Modificar inscripción')
+    }
+
+    const verPlantel = id => {
+        $('a[href="#tabPlanteles"]').tab('show')
+        $('#filtroPlantel').selectpicker('val', id).trigger('change')
+        $('#plantelInscripcion').selectpicker('val', id)
+    }
+
+    const editarPlantel = id => {
+        const item = organizacion.planteles.find(row => Number(row.id) === id)
+        if (!item) return
+        const form = $('#formPlantel')
+        form.find('[name=id]').val(item.id)
+        form.find('[name=id_torneo_equipo_fk]').selectpicker('val', item.id_torneo_equipo_fk).prop('disabled', true).selectpicker('refresh')
+        form.find('[name=id_jugador_fk]').selectpicker('val', item.id_jugador_fk).prop('disabled', true).selectpicker('refresh')
+        form.find('[name=dorsal]').val(item.dorsal)
+        form.find('[name=estado]').selectpicker('val', item.estado)
+        form.find('[name=fecha_alta]').val(item.fecha_alta)
+        form.find('[name=fecha_baja]').val(item.fecha_baja)
+        form.find('[name=observaciones]').val(item.observaciones)
+        $('#tituloPlantel').text('Modificar jugador del plantel')
+    }
+
+    const editarFase = id => {
+        const item = organizacion.fases.find(row => Number(row.id) === id)
+        if (!item) return
+        const form = $('#formFase')
+        form.find('[name=id]').val(item.id)
+        form.find('[name=id_torneo_categoria_fk]').selectpicker('val', item.id_torneo_categoria_fk)
+        form.find('[name=nombre]').val(item.nombre)
+        form.find('[name=tipo]').selectpicker('val', item.tipo)
+        form.find('[name=formato]').selectpicker('val', item.formato)
+        form.find('[name=orden]').val(item.orden)
+        form.find('[name=cantidad_ruedas]').val(item.cantidad_ruedas)
+        $('#tituloFase').text('Modificar fase')
+    }
+
+    const editarGrupo = id => {
+        const item = organizacion.grupos.find(row => Number(row.id) === id)
+        if (!item) return
+        const form = $('#formGrupo')
+        form.find('[name=id]').val(item.id)
+        form.find('[name=id_fase_fk]').selectpicker('val', item.id_fase_fk)
+        form.find('[name=nombre]').val(item.nombre)
+        form.find('[name=orden]').val(item.orden)
+        $('#tituloGrupo').text('Modificar grupo')
+    }
+
+    $('#formCategoria').on('submit', event => { event.preventDefault(); guardarFormulario('categoria', 'formCategoria') })
+    $('#formInscripcion').on('submit', event => { event.preventDefault(); guardarFormulario('inscripcion', 'formInscripcion') })
+    $('#formPlantel').on('submit', event => { event.preventDefault(); guardarFormulario('plantel', 'formPlantel') })
+    $('#formFase').on('submit', event => { event.preventDefault(); guardarFormulario('fase', 'formFase') })
+    $('#formGrupo').on('submit', event => { event.preventDefault(); guardarFormulario('grupo', 'formGrupo') })
+    $('#formGrupoEquipo').on('submit', async event => {
+        event.preventDefault()
+        const datos = datosFormulario(event.currentTarget)
+        $('#preloaderAPP').show()
+        try {
+            const res = await $.post(`/torneos/${torneoId}/organizacion/grupoEquipo/alta`, datos)
+            await MostrarSwalSinPreloader(res.title || 'Éxito', res.text || 'Equipo agregado al grupo', res.icon || 'success')
+            if (res.status) await cargarOrganizacion()
+        } catch (error) {
+            console.error(error)
+            await MostrarSwalSinPreloader('Error', error.responseText || 'No se pudo agregar el equipo al grupo.', 'error')
+        } finally {
+            $('#preloaderAPP').hide()
+        }
+    })
+    $('#filtroPlantel').on('change', pintarPlantel)
+    $('#asignacionGrupo').on('change', actualizarInscripcionesPorGrupo)
+    $(document).ready(cargarOrganizacion)
+</script>
+{% endblock %}
